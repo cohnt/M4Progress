@@ -22,21 +22,21 @@ class EchoServer : public WebSocketServer {
 };
 
 EchoServer::EchoServer(int port) : WebSocketServer(port) {}
-//EchoServer::~EchoServer() {}
-//void EchoServer::onConnect(int socketID) {
-//	Util::log("New connection");
-//}
-//void EchoServer::onMessage(int socketID, const string& data) {
-//	// Reply back with the same message
-//	Util::log("Received: " + data);
-//	this->send(socketID, data);
-//}
-//void EchoServer::onDisconnect(int socketID) {
-//	Util::log("Disconnect");
-//}
-//void EchoServer::onError(int socketID, const string& message) {
-//	Util::log("Error: " + message);
-//}
+EchoServer::~EchoServer() {}
+void EchoServer::onConnect(int socketID) {
+	Util::log("New connection");
+}
+void EchoServer::onMessage(int socketID, const string& data) {
+	// Reply back with the same message
+	Util::log("Received: " + data);
+	this->send(socketID, data);
+}
+void EchoServer::onDisconnect(int socketID) {
+	Util::log("Disconnect");
+}
+void EchoServer::onError(int socketID, const string& message) {
+	Util::log("Error: " + message);
+}
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
 	if(needOdom != false) {
@@ -75,8 +75,8 @@ int main(int argc, char **argv) {
 	ros::NodeHandle scanNodeHandle;
 	ros::Subscriber scanSubscriber = scanNodeHandle.subscribe("base_scan", 1000, scanCallback);
 
-	//EchoServer es = EchoServer(8080);
-	//es.run();
+	EchoServer es = EchoServer(8080);
+	es.run();
 
 	ros::spin();
 

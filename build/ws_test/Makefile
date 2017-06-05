@@ -180,6 +180,60 @@ server_base/fast:
 	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/build
 .PHONY : server_base/fast
 
+include/Util.o: include/Util.cpp.o
+
+.PHONY : include/Util.o
+
+# target to build an object file
+include/Util.cpp.o:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o
+.PHONY : include/Util.cpp.o
+
+include/Util.i: include/Util.cpp.i
+
+.PHONY : include/Util.i
+
+# target to preprocess a source file
+include/Util.cpp.i:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/Util.cpp.i
+.PHONY : include/Util.cpp.i
+
+include/Util.s: include/Util.cpp.s
+
+.PHONY : include/Util.s
+
+# target to generate assembly for a file
+include/Util.cpp.s:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/Util.cpp.s
+.PHONY : include/Util.cpp.s
+
+include/WebSocketServer.o: include/WebSocketServer.cpp.o
+
+.PHONY : include/WebSocketServer.o
+
+# target to build an object file
+include/WebSocketServer.cpp.o:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o
+.PHONY : include/WebSocketServer.cpp.o
+
+include/WebSocketServer.i: include/WebSocketServer.cpp.i
+
+.PHONY : include/WebSocketServer.i
+
+# target to preprocess a source file
+include/WebSocketServer.cpp.i:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.i
+.PHONY : include/WebSocketServer.cpp.i
+
+include/WebSocketServer.s: include/WebSocketServer.cpp.s
+
+.PHONY : include/WebSocketServer.s
+
+# target to generate assembly for a file
+include/WebSocketServer.cpp.s:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.s
+.PHONY : include/WebSocketServer.cpp.s
+
 src/server.o: src/server.cpp.o
 
 .PHONY : src/server.o
@@ -221,6 +275,12 @@ help:
 	@echo "... install/strip"
 	@echo "... install/local"
 	@echo "... test"
+	@echo "... include/Util.o"
+	@echo "... include/Util.i"
+	@echo "... include/Util.s"
+	@echo "... include/WebSocketServer.o"
+	@echo "... include/WebSocketServer.i"
+	@echo "... include/WebSocketServer.s"
 	@echo "... src/server.o"
 	@echo "... src/server.i"
 	@echo "... src/server.s"

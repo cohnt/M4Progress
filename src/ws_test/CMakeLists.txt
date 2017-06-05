@@ -188,7 +188,7 @@ catkin_package(
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(server_base src/server.cpp)
+add_executable(server_base src/server.cpp include/Util.h include/Util.cpp include/WebSocketServer.h include/WebSocketServer.cpp)
 target_link_libraries(server_base ${catkin_LIBRARIES})
 add_dependencies(server_base beginner_tutorials_generate_messages_cpp)
 

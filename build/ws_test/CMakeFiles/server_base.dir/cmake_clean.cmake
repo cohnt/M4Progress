@@ -1,5 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/server_base.dir/src/server.cpp.o"
+  "CMakeFiles/server_base.dir/include/Util.cpp.o"
+  "CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o"
   "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base.pdb"
   "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base"
 )
