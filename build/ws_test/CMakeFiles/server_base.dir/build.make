@@ -81,66 +81,14 @@ ws_test/CMakeFiles/server_base.dir/src/server.cpp.o.provides: ws_test/CMakeFiles
 ws_test/CMakeFiles/server_base.dir/src/server.cpp.o.provides.build: ws_test/CMakeFiles/server_base.dir/src/server.cpp.o
 
 
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o: ws_test/CMakeFiles/server_base.dir/flags.make
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/Util.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o"
-	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/server_base.dir/include/Util.cpp.o -c /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/Util.cpp
-
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/server_base.dir/include/Util.cpp.i"
-	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/Util.cpp > CMakeFiles/server_base.dir/include/Util.cpp.i
-
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/server_base.dir/include/Util.cpp.s"
-	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/Util.cpp -o CMakeFiles/server_base.dir/include/Util.cpp.s
-
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.requires:
-
-.PHONY : ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.requires
-
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.provides: ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.requires
-	$(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.provides.build
-.PHONY : ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.provides
-
-ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.provides.build: ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o
-
-
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o: ws_test/CMakeFiles/server_base.dir/flags.make
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/WebSocketServer.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o"
-	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && /usr/bin/c++   $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o -c /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/WebSocketServer.cpp
-
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/server_base.dir/include/WebSocketServer.cpp.i"
-	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/WebSocketServer.cpp > CMakeFiles/server_base.dir/include/WebSocketServer.cpp.i
-
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/server_base.dir/include/WebSocketServer.cpp.s"
-	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && /usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include/WebSocketServer.cpp -o CMakeFiles/server_base.dir/include/WebSocketServer.cpp.s
-
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.requires:
-
-.PHONY : ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.requires
-
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.provides: ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.requires
-	$(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.provides.build
-.PHONY : ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.provides
-
-ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.provides.build: ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o
-
-
 # Object files for target server_base
 server_base_OBJECTS = \
-"CMakeFiles/server_base.dir/src/server.cpp.o" \
-"CMakeFiles/server_base.dir/include/Util.cpp.o" \
-"CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o"
+"CMakeFiles/server_base.dir/src/server.cpp.o"
 
 # External object files for target server_base
 server_base_EXTERNAL_OBJECTS =
 
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: ws_test/CMakeFiles/server_base.dir/src/server.cpp.o
-/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o
-/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: ws_test/CMakeFiles/server_base.dir/build.make
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: /opt/ros/kinetic/lib/libroscpp.so
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: /usr/lib/x86_64-linux-gnu/libboost_signals.so
@@ -162,7 +110,7 @@ server_base_EXTERNAL_OBJECTS =
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: /usr/lib/x86_64-linux-gnu/libpthread.so
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so
 /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base: ws_test/CMakeFiles/server_base.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/server_base"
 	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/server_base.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -171,8 +119,6 @@ ws_test/CMakeFiles/server_base.dir/build: /home/tommy/Documents/Programming/Work
 .PHONY : ws_test/CMakeFiles/server_base.dir/build
 
 ws_test/CMakeFiles/server_base.dir/requires: ws_test/CMakeFiles/server_base.dir/src/server.cpp.o.requires
-ws_test/CMakeFiles/server_base.dir/requires: ws_test/CMakeFiles/server_base.dir/include/Util.cpp.o.requires
-ws_test/CMakeFiles/server_base.dir/requires: ws_test/CMakeFiles/server_base.dir/include/WebSocketServer.cpp.o.requires
 
 .PHONY : ws_test/CMakeFiles/server_base.dir/requires
 

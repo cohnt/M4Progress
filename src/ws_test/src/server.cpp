@@ -5,37 +5,35 @@
 #include "sensor_msgs/LaserScan.h"
 
 #include <iostream>
+#include <websocketpp/config/asio_no_tls.hpp>
+#include <websocketpp/server.hpp>
 
-#include "Util.h"
-#include "WebSocketServer.h"
+typedef websocketpp::server<websocketpp::config::asio> server;
+
+using websocketpp::lib::placeholders::_1;
+using websocketpp::lib::placeholders::_2;
+using websocketpp::lib::bind;
+
+typedef server::message_ptr message_ptr;
 
 bool needOdom;
 
-class EchoServer : public WebSocketServer {
-	public: 
-		EchoServer(int port);
-		~EchoServer();
-		virtual void onConnect(int socketID);
-		virtual void onMessage(int socketID, const string& data);
-		virtual void onDisconnect(int socketID);
-		virtual void onError(int socketID, const string& message);
-};
+void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
+	std::cout << "on_message called with hdl: " << hdl.lock().get() << " and message: " << msg->get_payload() << std::endl;
 
-EchoServer::EchoServer(int port) : WebSocketServer(port) {}
-EchoServer::~EchoServer() {}
-void EchoServer::onConnect(int socketID) {
-	Util::log("New connection");
-}
-void EchoServer::onMessage(int socketID, const string& data) {
-	// Reply back with the same message
-	Util::log("Received: " + data);
-	this->send(socketID, data);
-}
-void EchoServer::onDisconnect(int socketID) {
-	Util::log("Disconnect");
-}
-void EchoServer::onError(int socketID, const string& message) {
-	Util::log("Error: " + message);
+	// check for a special command to instruct the server to stop listening so
+	// it can be cleanly exited.
+	if(msg->get_payload() == "stop-listening") {
+		s->stop_listening();
+		return;
+	}
+
+	try {
+		s->send(hdl, msg->get_payload(), msg->get_opcode());
+	}
+	catch (const websocketpp::lib::error_code& e) {
+		std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
+	}
 }
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
@@ -75,8 +73,34 @@ int main(int argc, char **argv) {
 	ros::NodeHandle scanNodeHandle;
 	ros::Subscriber scanSubscriber = scanNodeHandle.subscribe("base_scan", 1000, scanCallback);
 
-	EchoServer es = EchoServer(8080);
-	es.run();
+	server echo_server;
+
+	try {
+		// Set logging settings
+		echo_server.set_access_channels(websocketpp::log::alevel::all);
+		echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
+
+		// Initialize Asio
+		echo_server.init_asio();
+
+		// Register our message handler
+		echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
+
+		// Listen on port 9002
+		echo_server.listen(9002);
+
+		// Start the server accept loop
+		echo_server.start_accept();
+
+		// Start the ASIO io_service run loop
+		echo_server.run();
+	}
+	catch (websocketpp::exception const & e) {
+		std::cout << e.what() << std::endl;
+	}
+	catch (...) {
+		std::cout << "other exception" << std::endl;
+	}
 
 	ros::spin();
 
