@@ -1,0 +1,2 @@
+read_and_print_base_scan:read_and_print_odometry:ws_test
+-DCATKIN_DEVEL_PREFIX=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel -DCMAKE_INSTALL_PREFIX=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/install -G Unix Makefiles

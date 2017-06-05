@@ -1,0 +1,8 @@
+prefix=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/install
+
+Name: read_and_print_base_scan
+Description: Description of read_and_print_base_scan
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/install/lib 
+Requires: 
