@@ -16,7 +16,7 @@ using websocketpp::lib::bind;
 
 typedef server::message_ptr message_ptr;
 
-bool needOdom;
+bool needOdom = true; //We want an odometry message first.
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	std::cout << "on_message called with hdl: " << hdl.lock().get() << " and message: " << msg->get_payload() << std::endl;
@@ -67,42 +67,25 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 }
 
 int main(int argc, char **argv) {
+	server echoServer;
+	echoServer.set_access_channels(websocketpp::log::alevel::all);
+	echoServer.clear_access_channels(websocketpp::log::alevel::frame_payload);
+	echoServer.init_asio();
+	echoServer.set_message_handler(bind(&on_message,&echoServer,::_1,::_2));
+	echoServer.listen(9002);
+	echoServer.start_accept();
+
+	std::thread wsServer(&server::run, &echoServer);
+	wsServer.detach();
+
 	ros::init(argc, argv, "send_data_to_page");
 	ros::NodeHandle odomNodeHandle;
 	ros::Subscriber odomSubscriber = odomNodeHandle.subscribe("odom", 1000, odomCallback);
 	ros::NodeHandle scanNodeHandle;
 	ros::Subscriber scanSubscriber = scanNodeHandle.subscribe("base_scan", 1000, scanCallback);
-
-	server echo_server;
-
-	try {
-		// Set logging settings
-		echo_server.set_access_channels(websocketpp::log::alevel::all);
-		echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
-
-		// Initialize Asio
-		echo_server.init_asio();
-
-		// Register our message handler
-		echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
-
-		// Listen on port 9002
-		echo_server.listen(9002);
-
-		// Start the server accept loop
-		echo_server.start_accept();
-
-		// Start the ASIO io_service run loop
-		echo_server.run();
-	}
-	catch (websocketpp::exception const & e) {
-		std::cout << e.what() << std::endl;
-	}
-	catch (...) {
-		std::cout << "other exception" << std::endl;
-	}
-
 	ros::spin();
+
+	echoServer.stop_listening();
 
 	return 0;
 }
