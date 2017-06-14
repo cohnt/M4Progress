@@ -17,8 +17,9 @@ using websocketpp::lib::bind;
 typedef server::message_ptr message_ptr;
 
 bool needOdom = true; //We want an odometry message first.
-//geometry_msgs::Pose lastOdomPose;
-//sensor_msgs::LaserScan lastBaseScan;
+bool serverStarted = false; //Has the server started yet?
+geometry_msgs::Pose lastOdomPose;
+sensor_msgs::LaserScan lastBaseScan;
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	std::cout << "on_message called with hdl: " << hdl.lock().get() << " and message: " << msg->get_payload() << std::endl;
@@ -38,29 +39,29 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 		std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
 	}
 }
-
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
 	if(needOdom != false) {
 		needOdom = false;
 
-		const geometry_msgs::Point pos = msg->pose.pose.position;
-		const float x = pos.x;
-		const float y = pos.y;
-		const float z = pos.z;
+		lastOdomPose = msg->pose.pose;
+
+		const float x = lastOdomPose.position.x;
+		const float y = lastOdomPose.position.y;
+		const float z = lastOdomPose.position.z;
 
 		std::cout << x << "," << y << "," << z << ",\n";
-
-		//lastOdomPose = msg->pose;
 	}
 }
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	if(needOdom != true) {
 		needOdom = true;
 
-		const float angle_min = msg->angle_min;
-		const float angle_max = msg->angle_max;
-		const float angle_increment = msg->angle_increment;
-		const std::vector<float> ranges = msg->ranges;
+		lastBaseScan = *msg;
+
+		const float angle_min = lastBaseScan.angle_min;
+		const float angle_max = lastBaseScan.angle_max;
+		const float angle_increment = lastBaseScan.angle_increment;
+		const std::vector<float> ranges = lastBaseScan.ranges;
 
 		std::cout << "angle_min:" << angle_min << " angle_max:" << angle_max << " angle_increment:" << angle_increment << "\n";
 		std::cout << "ranges:" << ranges[0];
@@ -68,8 +69,6 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 			std::cout << "," << ranges[i];
 		}
 		std::cout << "\n";
-
-		//lastBaseScan = *msg;
 	}
 }
 
@@ -85,6 +84,7 @@ int main(int argc, char **argv) {
 
 	std::thread wsServer(&server::run, &echoServer);
 	wsServer.detach();
+	serverStarted = true;
 
 	ros::init(argc, argv, "send_data_to_page");
 	ros::NodeHandle odomNodeHandle;
@@ -93,6 +93,11 @@ int main(int argc, char **argv) {
 	ros::Subscriber scanSubscriber = scanNodeHandle.subscribe("base_scan", 1000, scanCallback);
 	ros::spin();
 
+	while(ros::ok()) {
+		//
+	}
+
+	echoServer.stop_perpetual();
 	echoServer.stop_listening();
 
 	return 0;
