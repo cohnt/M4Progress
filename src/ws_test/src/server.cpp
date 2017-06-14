@@ -22,18 +22,8 @@ geometry_msgs::Pose lastOdomPose;
 sensor_msgs::LaserScan lastBaseScan;
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
-	std::cout << "on_message called with hdl: " << hdl.lock().get() << " and message: " << msg->get_payload() << std::endl;
-
-	// check for a special command to instruct the server to stop listening so
-	// it can be cleanly exited.
-	if(msg->get_payload() == "stop-listening") {
-		s->stop_listening();
-		return;
-	}
-
 	try {
-		//s->send(hdl, lastOdomPose, msg->get_opcode());
-		//s->send(hdl, lastBaseScan, msg->get_opcode());
+		//	s->send(hdl, lastOdomPose, msg->get_opcode());
 	}
 	catch (const websocketpp::lib::error_code& e) {
 		std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
