@@ -17,6 +17,8 @@ using websocketpp::lib::bind;
 typedef server::message_ptr message_ptr;
 
 bool needOdom = true; //We want an odometry message first.
+//geometry_msgs::Pose lastOdomPose;
+//sensor_msgs::LaserScan lastBaseScan;
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	std::cout << "on_message called with hdl: " << hdl.lock().get() << " and message: " << msg->get_payload() << std::endl;
@@ -29,7 +31,8 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	}
 
 	try {
-		s->send(hdl, msg->get_payload(), msg->get_opcode());
+		//s->send(hdl, lastOdomPose, msg->get_opcode());
+		//s->send(hdl, lastBaseScan, msg->get_opcode());
 	}
 	catch (const websocketpp::lib::error_code& e) {
 		std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
@@ -46,6 +49,8 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
 		const float z = pos.z;
 
 		std::cout << x << "," << y << "," << z << ",\n";
+
+		//lastOdomPose = msg->pose;
 	}
 }
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -63,6 +68,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 			std::cout << "," << ranges[i];
 		}
 		std::cout << "\n";
+
+		//lastBaseScan = *msg;
 	}
 }
 
@@ -70,6 +77,7 @@ int main(int argc, char **argv) {
 	server echoServer;
 	echoServer.set_access_channels(websocketpp::log::alevel::all);
 	echoServer.clear_access_channels(websocketpp::log::alevel::frame_payload);
+	echoServer.set_reuse_addr(true);
 	echoServer.init_asio();
 	echoServer.set_message_handler(bind(&on_message,&echoServer,::_1,::_2));
 	echoServer.listen(9002);
