@@ -4,6 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/src/data_message.cpp" "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test/CMakeFiles/server_base.dir/src/data_message.cpp.o"
   "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/src/server.cpp" "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test/CMakeFiles/server_base.dir/src/server.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
@@ -20,6 +21,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/ws_test/include"
   "/opt/ros/kinetic/include"
   "/opt/ros/kinetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp"
+  "/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/src"
   )
 
 # Targets to which this target links.

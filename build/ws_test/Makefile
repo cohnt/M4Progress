@@ -180,6 +180,33 @@ server_base/fast:
 	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/build
 .PHONY : server_base/fast
 
+src/data_message.o: src/data_message.cpp.o
+
+.PHONY : src/data_message.o
+
+# target to build an object file
+src/data_message.cpp.o:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/src/data_message.cpp.o
+.PHONY : src/data_message.cpp.o
+
+src/data_message.i: src/data_message.cpp.i
+
+.PHONY : src/data_message.i
+
+# target to preprocess a source file
+src/data_message.cpp.i:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/src/data_message.cpp.i
+.PHONY : src/data_message.cpp.i
+
+src/data_message.s: src/data_message.cpp.s
+
+.PHONY : src/data_message.s
+
+# target to generate assembly for a file
+src/data_message.cpp.s:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f ws_test/CMakeFiles/server_base.dir/build.make ws_test/CMakeFiles/server_base.dir/src/data_message.cpp.s
+.PHONY : src/data_message.cpp.s
+
 src/server.o: src/server.cpp.o
 
 .PHONY : src/server.o
@@ -221,6 +248,9 @@ help:
 	@echo "... install/strip"
 	@echo "... install/local"
 	@echo "... test"
+	@echo "... src/data_message.o"
+	@echo "... src/data_message.i"
+	@echo "... src/data_message.s"
 	@echo "... src/server.o"
 	@echo "... src/server.i"
 	@echo "... src/server.s"

@@ -11,9 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package()
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src)
 
-add_executable(server_base src/server.cpp include/echo_handler.hpp)
+add_executable(server_base src/server.cpp src/data_message.cpp src/data_message.h include/echo_handler.hpp)
 target_link_libraries(server_base ${catkin_LIBRARIES})
 add_dependencies(server_base beginner_tutorials_generate_messages_cpp)
 

@@ -8,6 +8,8 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 
+#include "data_message.h"
+
 typedef websocketpp::server<websocketpp::config::asio> server;
 
 using websocketpp::lib::placeholders::_1;
@@ -18,12 +20,16 @@ typedef server::message_ptr message_ptr;
 
 bool needOdom = true; //We want an odometry message first.
 bool serverStarted = false; //Has the server started yet?
-geometry_msgs::Pose lastOdomPose;
-sensor_msgs::LaserScan lastBaseScan;
+geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
+sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
+dataMessage lastDataMessage; //The last data message compiled (to be sent to the client)
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
-		//	s->send(hdl, lastOdomPose, msg->get_opcode());
+		char *outgoingMessage = lastDataMessage.stringify();
+		std::cout << outgoingMessage << std::endl;
+		s->send(hdl, outgoingMessage, msg->get_opcode());
+		free(outgoingMessage);
 	}
 	catch (const websocketpp::lib::error_code& e) {
 		std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
@@ -47,6 +53,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		needOdom = true;
 
 		lastBaseScan = *msg;
+		lastDataMessage.newBaseScan(lastBaseScan);
+		lastDataMessage.newOdometry(lastOdomPose);
 
 		const float angle_min = lastBaseScan.angle_min;
 		const float angle_max = lastBaseScan.angle_max;
