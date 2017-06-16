@@ -6,6 +6,7 @@ var zoom = 100; //As the path and information get bigger, it's useful to zoom ou
                 //In other words, the units are pixels per meter.
 var positionOffset = [0, 0]; //This is used to keep the robot's location on the screen centered.
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
+var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
 
 var canvas; //A global variable 
 var context;
@@ -60,7 +61,9 @@ function mainLoop(message) {
 	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
+	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
 	drawRanges(data.ranges.slice(0), data.minAngle, data.incrementAngle);
+	context.transform(1, 0, 0, 1, -lidarForwardDistance, 0);
 	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
 	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
 	drawRobotPath();
