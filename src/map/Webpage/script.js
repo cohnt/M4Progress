@@ -60,11 +60,13 @@ function mainLoop(message) {
 	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
-	drawRobotMarker();
 	drawRanges(data.ranges.slice(0), data.minAngle, data.incrementAngle);
 	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
 	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
 	drawRobotPath();
+	context.transform(1, 0, 0, 1, data.position[0], data.position[1]);
+	context.transform(Math.cos(data.angle), Math.sin(data.angle), -Math.sin(data.angle), Math.cos(data.angle), 0, 0);
+	drawRobotMarker();
 
 	requestAnimationFrame(sendDataRequest);
 }
@@ -129,18 +131,18 @@ function drawRanges(r, tMin, tInc, tRobot) {
 			r[i].push(true);
 		}
 	}
+	context.beginPath();
 	for(var i=1; i<r.length; ++i) {
 		if(r[i][2]) {
-			drawRangeLineSegment(r[i-1], r[i]);
+			addRangeLineSegment(r[i-1], r[i]);
 		}
 	}
+	context.stroke();
 	drawRangesFill(r);
 }
-function drawRangeLineSegment(p0, p1) {
-	context.beginPath();
+function addRangeLineSegment(p0, p1) {
 	context.moveTo(p0[0], p0[1]);
 	context.lineTo(p1[0], p1[1]);
-	context.stroke();
 }
 function drawRangesFill(r) {
 	context.beginPath();
