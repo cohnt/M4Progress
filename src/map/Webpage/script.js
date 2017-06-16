@@ -1,12 +1,39 @@
 var robotMarkerRadius = 0.3; //The radius of the circle that marks the robot's location, in meters.
 var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing which direction the robot is pointing. This is the angle between the centerline and one of the sides.
 var pointsRecord = []; //This record the list of 2D point where the robot has been, so the program can draw lines between them.
-var scaleFactor = 100; //As the path and information get bigger, it's useful to zoom out.
+var zoom = 100; //As the path and information get bigger, it's useful to zoom out.
+                //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
+                //In other words, the units are pixels per meter.
 var positionOffset = [0, 0]; //This is used to keep the robot's location on the screen centered.
+var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 
-var canvas;
+var canvas; //A global variable 
 var context;
 var ws;
+
+function serverMessage(msg) {
+	var splitMsg = msg.split("|"); //The message is pipe-delimited, as commas are used in the range list.
+
+	this.position = splitMsg.slice(0, 3);
+	this.quaternion = splitMsg.slice(3, 7);
+	for(var i=0; i<this.position.length; ++i) {
+		this.position[i] = Number(this.position[i]);
+	}
+	for(var i=0; i<this.quaternion.length; ++i) {
+		this.quaternion[i] = Number(this.quaternion[i]);
+	}
+	this.euler = quaternionToEuler(this.quaternion);
+	this.angle = euler[yawIndex];
+
+	this.minAngle = Number(splitMsg[7]);
+	this.maxAngle = Number(splitMsg[8]);
+	this.incrementAngle = Number(splitMsg[9]);
+
+	this.ranges = splitMsg[10].split(",");
+	for(var i=0; i<this.ranges.length; ++i) {
+		this.ranges[i] = Number(this.ranges[i]);
+	}
+}
 
 function setup() { //Call this to get the program going.
 	canvas = document.getElementById("map"); //Grab the HTMl of the canvas.
@@ -16,36 +43,20 @@ function setup() { //Call this to get the program going.
 	context.beginPath(); //This starts a path so lines can be drawn.
 	document.getElementById("connect").addEventListener("click", startServerConnection);
 }
-function mainLoop(data) {
-	var temp = data.split("|");
+function mainLoop(message) {
+	var data = new serverMessage(message);
 
-	//Store the x, y, and z position in a separate variable.
-	positionXYZ = [temp[0], temp[1], temp[2]];
+	pointsRecord.push(data.position.slice(0,2)); //Store the next point to the list.
 
-	//Store the x, y, z, and w quaternion in a separate variable.
-	quaternionXYZW = [temp[3], temp[4], temp[5], temp[6]];
-
-	var eulerAngles = quaternionToEuler(quaternionXYZW); //Convert the quaternion to euler angles.
-	var theta = eulerAngles[0]; //This is the XY-plane angle actually used, rotated 90 degrees so that forward is up instead of right.
-
-	pointsRecord.push([positionXYZ[0], positionXYZ[1]]); //Store the next point to the list.
-
-	context.lineWidth = 1/scaleFactor; //Make sure the lines don't freak out.
-
+	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
 	context.setTransform(1, 0, 0, 1, 0, 0); //Reset all transforms on the context.
 	context.clearRect(0, 0, canvas.width, canvas.height); //Clear the canvas.
 	context.transform(1, 0, 0, 1, canvas.width/2, canvas.height/2); //Put 0, 0 in the center of the canvas.
-	context.transform(scaleFactor, 0, 0, scaleFactor, 0, 0); //Scale the canvas.
+	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
-	context.moveTo(pointsRecord[0][0]-positionXYZ[0], pointsRecord[0][1]-positionXYZ[1]); //Move to the first point in the path.
-	context.beginPath();
-	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
-		context.lineTo(pointsRecord[i][0]-positionXYZ[0], pointsRecord[i][1]-positionXYZ[1]); //Draw a line to the next point.
-		context.stroke();
-	}
-
-	context.transform(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0); //Orient the path behind the robot properly.
+	var theta = data.angle;
+	context.transform(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0); //Orient the robot marker properly.
 	context.beginPath();
 	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
 	context.stroke();
@@ -61,6 +72,16 @@ function mainLoop(data) {
 	context.moveTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.stroke();
+
+	context.transform(Math.cos(-theta), Math.sin(-theta), -Math.sin(-theta), Math.cos(-theta), 0, 0);
+	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
+
+	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
+	context.beginPath();
+	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
+		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
+		context.stroke();
+	}
 
 
 	requestAnimationFrame(sendDataRequest); //When using data directly from the robot, use requestAnimationFrame().
