@@ -32,6 +32,9 @@ function serverMessage(msg) {
 	this.ranges = splitMsg[10].split(",");
 	for(var i=0; i<this.ranges.length; ++i) {
 		this.ranges[i] = Number(this.ranges[i]);
+		if(isNaN(this.ranges[i])) {
+			this.ranges[i] = Infinity;
+		}
 	}
 }
 
@@ -58,7 +61,7 @@ function mainLoop(message) {
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
 	drawRobotMarker();
-	drawRanges(data.ranges, data.minAngle, data.incrementAngle);
+	drawRanges(data.ranges.slice(0), data.minAngle, data.incrementAngle);
 	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
 	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
 	drawRobotPath();
@@ -111,40 +114,46 @@ function drawRobotMarker() {
 	context.stroke();
 }
 function drawRanges(r, tMin, tInc, tRobot) {
-	context.beginPath();
-	var rIndex = 0
-	while(isNaN(r[rIndex])) {
-		++rIndex;
-		if(rIndex >= r.length) {
-			return;
-		}
-	}
-	var t = tMin + (tInc * rIndex);
-	r[rIndex] = [r[rIndex]*Math.cos(t), -r[rIndex]*Math.sin(t)];
-	for(var i=rIndex+1; i<r.length; ++i) {
+	var t = tMin;
+
+	r[0] = [r[0]*Math.cos(t), -r[0]*Math.sin(t), false];
+	for(var i=1; i<r.length; ++i) {
 		t += tInc;
-		if(!isNaN(r[i])) {
-			r[i] = [r[i]*Math.cos(t), -r[i]*Math.sin(t)];
-			if(r[i-1].length == 2) {
-				drawRangeLineSegment(r[i-1], r[i]);
-			}
+		r[i] = [r[i]*Math.cos(t), -r[i]*Math.sin(t)];
+		if(r[i-1][0] == Infinity || r[i-1][0] == -Infinity || isNaN(r[i-1][0])) {
+			r[i].push(false);
+			r.splice(i-1, 1);
+			--i;
+		}
+		else {
+			r[i].push(true);
 		}
 	}
+	for(var i=1; i<r.length; ++i) {
+		if(r[i][2]) {
+			drawRangeLineSegment(r[i-1], r[i]);
+		}
+	}
+	drawRangesFill(r);
 }
 function drawRangeLineSegment(p0, p1) {
-	context.beginPath();
-	context.moveTo(0, 0);
-	context.lineTo(p0[0], p0[1]);
-	context.lineTo(p1[0], p1[1]);
-	context.lineTo(0, 0);
-	context.fillStyle = "black";
-	context.closePath();
-	context.fill();
-
 	context.beginPath();
 	context.moveTo(p0[0], p0[1]);
 	context.lineTo(p1[0], p1[1]);
 	context.stroke();
+}
+function drawRangesFill(r) {
+	context.beginPath();
+	context.moveTo(0, 0);
+
+	for(var i=1; i<r.length; ++i) {
+		context.lineTo(r[i][0], r[i][1]);
+	}
+	context.lineTo(0, 0);
+	
+	context.fillStyle = "white";
+	context.closePath();
+	context.fill();
 }
 function drawRobotPath() {
 	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
