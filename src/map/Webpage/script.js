@@ -7,6 +7,7 @@ var zoom = 100; //As the path and information get bigger, it's useful to zoom ou
 var positionOffset = [0, 0]; //This is used to keep the robot's location on the screen centered.
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
+var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
 
 var canvas; //A global variable 
 var context;
@@ -15,7 +16,7 @@ var ws;
 function serverMessage(msg) {
 	var splitMsg = msg.split("|"); //The message is pipe-delimited, as commas are used in the range list.
 
-	this.position = splitMsg.slice(0, 3);
+	this.position = splitMsg.slice(0, 2);
 	this.quaternion = splitMsg.slice(3, 7);
 	for(var i=0; i<this.position.length; ++i) {
 		this.position[i] = Number(this.position[i]);
@@ -50,7 +51,12 @@ function setup() { //Call this to get the program going.
 function mainLoop(message) {
 	var data = new serverMessage(message);
 
-	pointsRecord.push(data.position.slice(0,2)); //Store the next point to the list.
+	if(pointsRecord.length != 0) {
+		console.log(distanceSquared(data.position, pointsRecord[pointsRecord.length-1]));
+	}
+	if(pointsRecord.length == 0 || distanceSquared(data.position, pointsRecord[pointsRecord.length-1]) > minPositionRecordDistance) {
+		pointsRecord.push(data.position.slice(0,2)); //Store the next point to the list.
+	}
 
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
 	context.fillStyle = "#eeeeee"; //Fill the screen (by default) with grey.
@@ -167,6 +173,14 @@ function drawRobotPath() {
 		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
 		context.stroke();
 	}
+}
+function distanceSquared(p1, p2) {
+	//Useful for quickly computing distance thresholds.
+	var sum = 0;
+	for(var i=0; i<p1.length; ++i) {
+		sum += Math.pow(p2[i]-p1[i], 2);
+	}
+	return sum;
 }
 
 setup();
