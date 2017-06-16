@@ -49,42 +49,21 @@ function mainLoop(message) {
 	pointsRecord.push(data.position.slice(0,2)); //Store the next point to the list.
 
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
+	context.fillStyle = "#eeeeee"; //Fill the screen (by default) with grey.
 	context.setTransform(1, 0, 0, 1, 0, 0); //Reset all transforms on the context.
 	context.clearRect(0, 0, canvas.width, canvas.height); //Clear the canvas.
+	context.fillRect(0, 0, canvas.width, canvas.height); //Give the canvas its default background.
 	context.transform(1, 0, 0, 1, canvas.width/2, canvas.height/2); //Put 0, 0 in the center of the canvas.
 	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
-	var theta = data.angle;
-	context.transform(Math.cos(theta), Math.sin(theta), -Math.sin(theta), Math.cos(theta), 0, 0); //Orient the robot marker properly.
-	context.beginPath();
-	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
-	context.stroke();
-
-	//These lines draw a triangle inside the circle, to show the direction of the robot.
-	context.beginPath();
-	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-	context.moveTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-
-	context.transform(Math.cos(-theta), Math.sin(-theta), -Math.sin(-theta), Math.cos(-theta), 0, 0);
+	drawRobotMarker();
+	drawRanges(data.ranges, data.minAngle, data.incrementAngle);
+	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
 	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
+	drawRobotPath();
 
-	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
-	context.beginPath();
-	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
-		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
-		context.stroke();
-	}
-
-
-	requestAnimationFrame(sendDataRequest); //When using data directly from the robot, use requestAnimationFrame().
+	requestAnimationFrame(sendDataRequest);
 }
 
 function sendDataRequest() {
@@ -107,12 +86,72 @@ function quaternionToEuler(quat) { //This takes the quaternion array [x, y, z, w
 function startServerConnection() {
 	ws = new WebSocket(document.getElementById("serverAddress").value); //This creates the websocket object.
 	ws.onmessage = function(event) { //When a message is received...
-		//console.log(event.data);
 		mainLoop(event.data); //Go into the main loop and use the data.
 	}
 	ws.onopen = function() {
 		console.log("Connection opened.");
 		sendDataRequest();
+	}
+}
+function drawRobotMarker() {
+	context.beginPath();
+	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
+	context.stroke();
+
+	//These lines draw a triangle inside the circle, to show the direction of the robot.
+	context.beginPath();
+	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
+	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.stroke();
+	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
+	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.stroke();
+	context.moveTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.stroke();
+}
+function drawRanges(r, tMin, tInc, tRobot) {
+	context.beginPath();
+	var rIndex = 0
+	while(isNaN(r[rIndex])) {
+		++rIndex;
+		if(rIndex >= r.length) {
+			return;
+		}
+	}
+	var t = tMin + (tInc * rIndex);
+	r[rIndex] = [r[rIndex]*Math.cos(t), -r[rIndex]*Math.sin(t)];
+	for(var i=rIndex+1; i<r.length; ++i) {
+		t += tInc;
+		if(!isNaN(r[i])) {
+			r[i] = [r[i]*Math.cos(t), -r[i]*Math.sin(t)];
+			if(r[i-1].length == 2) {
+				drawRangeLineSegment(r[i-1], r[i]);
+			}
+		}
+	}
+}
+function drawRangeLineSegment(p0, p1) {
+	context.beginPath();
+	context.moveTo(0, 0);
+	context.lineTo(p0[0], p0[1]);
+	context.lineTo(p1[0], p1[1]);
+	context.lineTo(0, 0);
+	context.fillStyle = "black";
+	context.closePath();
+	context.fill();
+
+	context.beginPath();
+	context.moveTo(p0[0], p0[1]);
+	context.lineTo(p1[0], p1[1]);
+	context.stroke();
+}
+function drawRobotPath() {
+	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
+	context.beginPath();
+	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
+		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
+		context.stroke();
 	}
 }
 
