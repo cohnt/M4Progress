@@ -119,6 +119,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/gtest/cmake_install.cmake")
   include("/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/read_and_print_base_scan/cmake_install.cmake")
   include("/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/ws_test/cmake_install.cmake")
+  include("/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/map/cmake_install.cmake")
   include("/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build/read_and_print_odometry/cmake_install.cmake")
 
 endif()

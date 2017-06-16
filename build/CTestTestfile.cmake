@@ -7,4 +7,5 @@
 subdirs(gtest)
 subdirs(read_and_print_base_scan)
 subdirs(ws_test)
+subdirs(map)
 subdirs(read_and_print_odometry)

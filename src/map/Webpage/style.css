@@ -1,0 +1,29 @@
+body {
+	background-color: #eeeeee;
+}
+div {
+	display: inline-block;
+}
+textarea {
+	vertical-align: middle;
+}
+pre {
+	margin: 2px;
+	display: inline-block;
+}
+canvas {
+	border: 1px dotted #777777;
+	background-color: white;
+}
+
+textarea.oneLineInput {
+	height: 18px;
+	width: 200px;
+	resize: horizontal;
+	max-width: 750px;
+}
+
+div#connect {
+	background-color: #aaccff;
+	padding: 10px 10px;
+}

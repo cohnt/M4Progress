@@ -751,6 +751,19 @@ server_base/fast:
 .PHONY : server_base/fast
 
 #=============================================================================
+# Target rules for targets named map_server
+
+# Build rule for target.
+map_server: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 map_server
+.PHONY : map_server
+
+# fast build rule for target.
+map_server/fast:
+	$(MAKE) -f map/CMakeFiles/map_server.dir/build.make map/CMakeFiles/map_server.dir/build
+.PHONY : map_server/fast
+
+#=============================================================================
 # Target rules for targets named listener_odom
 
 # Build rule for target.
@@ -821,6 +834,7 @@ help:
 	@echo "... nav_msgs_generate_messages_py"
 	@echo "... _catkin_empty_exported_target"
 	@echo "... server_base"
+	@echo "... map_server"
 	@echo "... listener_odom"
 .PHONY : help
 
