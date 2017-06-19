@@ -11,6 +11,13 @@ var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have t
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
+var styles = {
+	robotMarker: "#000000",
+	robotPath: "#888888",
+	wallLines: "#000000",
+	wallFill: "#ffffff",
+	background: "#eeeeee"
+};
 
 var canvas; //A global variable 
 var context;
@@ -71,7 +78,7 @@ function mainLoop(message) {
 	}
 
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
-	context.fillStyle = "#eeeeee"; //Fill the screen (by default) with grey.
+	context.fillStyle = styles.background; //Fill the screen (by default) with grey.
 	context.setTransform(1, 0, 0, 1, 0, 0); //Reset all transforms on the context.
 	context.clearRect(0, 0, canvas.width, canvas.height); //Clear the canvas.
 	context.fillRect(0, 0, canvas.width, canvas.height); //Give the canvas its default background.
@@ -120,6 +127,7 @@ function startServerConnection() {
 	}
 }
 function drawRobotMarker() {
+	context.strokeStyle = styles.robotMarker;
 	context.beginPath();
 	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
 	context.stroke();
@@ -136,7 +144,17 @@ function drawRobotMarker() {
 	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.stroke();
 }
+function drawRobotPath() {
+	context.strokeStyle = styles.robotPath
+	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
+	context.beginPath();
+	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
+		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
+		context.stroke();
+	}
+}
 function drawWalls(walls) {
+	context.strokeStyle = styles.wallLines;
 	context.beginPath();
 	context.moveTo(walls[0][0], walls[0][1]);
 	for(var i=1; i<walls.length; ++i) {
@@ -167,17 +185,9 @@ function drawWallsFill(walls) {
 	}
 	context.lineTo(0, 0);
 	
-	context.fillStyle = "white";
+	context.fillStyle = styles.wallFill;
 	context.closePath();
 	context.fill();
-}
-function drawRobotPath() {
-	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
-	context.beginPath();
-	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
-		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
-		context.stroke();
-	}
 }
 function distanceSquared(p1, p2) {
 	//Useful for quickly computing distance thresholds.
