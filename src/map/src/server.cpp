@@ -7,8 +7,10 @@
 #include <iostream>
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+#include <math.h>
 
 #include "data_message.h"
+#include "world_state.h"
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -22,11 +24,11 @@ bool needOdom = true; //We want an odometry message first.
 bool serverStarted = false; //Has the server started yet?
 geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
-dataMessage lastDataMessage; //The last data message compiled (to be sent to the client)
+worldState lastWorldState; //The most recent world state.
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
-		char *outgoingMessage = lastDataMessage.stringify();
+		char *outgoingMessage = lastWorldState.stringify();
 		std::cout << outgoingMessage << std::endl;
 		s->send(hdl, outgoingMessage, msg->get_opcode());
 		free(outgoingMessage);
@@ -45,7 +47,7 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
 		const float y = lastOdomPose.position.y;
 		const float z = lastOdomPose.position.z;
 
-		std::cout << x << "," << y << "," << z << ",\n";
+//		std::cout << x << "," << y << "," << z << ",\n";
 	}
 }
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
@@ -53,20 +55,20 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		needOdom = true;
 
 		lastBaseScan = *msg;
-		lastDataMessage.newBaseScan(lastBaseScan);
-		lastDataMessage.newOdometry(lastOdomPose);
+		lastWorldState.newBaseScan(lastBaseScan);
+		lastWorldState.newOdometry(lastOdomPose);
 
 		const float angle_min = lastBaseScan.angle_min;
 		const float angle_max = lastBaseScan.angle_max;
 		const float angle_increment = lastBaseScan.angle_increment;
 		const std::vector<float> ranges = lastBaseScan.ranges;
 
-		std::cout << "angle_min:" << angle_min << " angle_max:" << angle_max << " angle_increment:" << angle_increment << "\n";
-		std::cout << "ranges:" << ranges[0];
+//		std::cout << "angle_min:" << angle_min << " angle_max:" << angle_max << " angle_increment:" << angle_increment << "\n";
+//		std::cout << "ranges:" << ranges[0];
 		for(int i=0; i<ranges.size(); ++i) {
-			std::cout << "," << ranges[i];
+//			std::cout << "," << ranges[i];
 		}
-		std::cout << "\n";
+//		std::cout << "\n";
 	}
 }
 

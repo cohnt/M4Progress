@@ -8,7 +8,9 @@ var positionOffset = [0, 0]; //This is used to keep the robot's location on the 
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
 var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
-var rangesFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
+var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
+var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
+var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
 
 var canvas; //A global variable 
 var context;
@@ -39,6 +41,18 @@ function serverMessage(msg) {
 			this.ranges[i] = Infinity;
 		}
 	}
+
+	this.walls = splitMsg[11].split(";");
+	for(var i=0; i<this.walls.length; ++i) {
+		this.walls[i] = this.walls[i].slice(1, -1).split(",");
+		this.walls[i][0] = Number(this.walls[i][0]); this.walls[i][1] = Number(this.walls[i][1]);
+		var doNotNeed1 = Math.abs(this.walls[i][0]-this.position[0]) < epsilonFloat && Math.abs(this.walls[i][1]-this.position[1]) < epsilonFloat;
+		var doNotNeed2 = isNaN(this.walls[i][0]) || isNaN(this.walls[i][1]);
+		if(doNotNeed1 || doNotNeed2) {
+			this.walls.splice(i, 1);
+			--i;
+		}
+	}
 }
 
 function setup() { //Call this to get the program going.
@@ -66,7 +80,7 @@ function mainLoop(message) {
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
 	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
-	drawRanges(data.ranges.slice(0), data.minAngle, data.incrementAngle);
+	drawWalls(data.walls, data.minAngle, data.ranges, data.incrementAngle);
 	context.transform(1, 0, 0, 1, -lidarForwardDistance, 0);
 	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
 	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
@@ -122,47 +136,35 @@ function drawRobotMarker() {
 	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.stroke();
 }
-function drawRanges(r, tMin, tInc, tRobot) {
-	var t = tMin;
-
-	r[0] = [r[0]*Math.cos(t), -r[0]*Math.sin(t), false];
-	for(var i=1; i<r.length; ++i) {
-		t += tInc;
-		r[i] = [r[i]*Math.cos(t), -r[i]*Math.sin(t)];
-		if(r[i-1][0] == Infinity || r[i-1][0] == -Infinity || isNaN(r[i-1][0])) {
-			r[i].push(false);
-			r.splice(i-1, 1);
-			--i;
+function drawWalls(walls) {
+	context.beginPath();
+	context.moveTo(walls[0][0], walls[0][1]);
+	for(var i=1; i<walls.length; ++i) {
+		if(distanceSquared(walls[i], walls[i-1]) < maxWallRenderConnectedDistance) {
+			context.lineTo(walls[i][0], walls[i][1]);
 		}
 		else {
-			r[i].push(true);
-		}
-	}
-	context.beginPath();
-	for(var i=1; i<r.length; ++i) {
-		if(r[i][2]) {
-			addRangeLineSegment(r[i-1], r[i]);
+			context.stroke();
+			context.moveTo(walls[i][0], walls[i][1]);
+			context.beginPath();
 		}
 	}
 	context.stroke();
-	drawRangesFill(r);
+	drawWallsFill(walls);
 }
 function addRangeLineSegment(p0, p1) {
 	context.moveTo(p0[0], p0[1]);
 	context.lineTo(p1[0], p1[1]);
 }
-function drawRangesFill(r) {
+function drawWallsFill(walls) {
 	context.beginPath();
 	context.moveTo(0, 0);
 
-	var smallestDSquared = Infinity;
-
-	for(var i=1; i<r.length; ++i) {
-		if(distanceSquared(r[i], [0, 0, 0]) > rangesFillMinDistanceSquaredFromCenter) {
-			context.lineTo(r[i][0], r[i][1]);
+	for(var i=1; i<walls.length; ++i) {
+		if(distanceSquared(walls[i], [0, 0, 0]) > wallsFillMinDistanceSquaredFromCenter) {
+			context.lineTo(walls[i][0], walls[i][1]);
 		}
 	}
-	console.log(smallestDSquared);
 	context.lineTo(0, 0);
 	
 	context.fillStyle = "white";

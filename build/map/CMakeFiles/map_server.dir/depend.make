@@ -27,6 +27,7 @@ map/CMakeFiles/map_server.dir/src/data_message.cpp.o: /opt/ros/kinetic/include/s
 
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/map/src/data_message.h
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/map/src/server.cpp
+map/CMakeFiles/map_server.dir/src/server.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/map/src/world_state.h
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/geometry_msgs/Point.h
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/geometry_msgs/Pose.h
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/geometry_msgs/PoseWithCovariance.h
@@ -94,4 +95,28 @@ map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/std_msg
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/std_msgs/String.h
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/xmlrpcpp/XmlRpcDecl.h
 map/CMakeFiles/map_server.dir/src/server.cpp.o: /opt/ros/kinetic/include/xmlrpcpp/XmlRpcValue.h
+
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/map/src/world_state.cpp
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/src/map/src/world_state.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/geometry_msgs/Point.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/geometry_msgs/Pose.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/geometry_msgs/Quaternion.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/builtin_message_traits.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/datatypes.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/duration.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/exception.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/macros.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/message_forward.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/message_operations.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/message_traits.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/platform.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/roscpp_serialization_macros.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/rostime_decl.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/serialization.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/serialized_message.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/time.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/ros/types.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/sensor_msgs/LaserScan.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/std_msgs/Header.h
+map/CMakeFiles/map_server.dir/src/world_state.cpp.o: /opt/ros/kinetic/include/std_msgs/String.h
 

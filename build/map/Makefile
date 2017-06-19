@@ -234,6 +234,33 @@ src/server.cpp.s:
 	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f map/CMakeFiles/map_server.dir/build.make map/CMakeFiles/map_server.dir/src/server.cpp.s
 .PHONY : src/server.cpp.s
 
+src/world_state.o: src/world_state.cpp.o
+
+.PHONY : src/world_state.o
+
+# target to build an object file
+src/world_state.cpp.o:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f map/CMakeFiles/map_server.dir/build.make map/CMakeFiles/map_server.dir/src/world_state.cpp.o
+.PHONY : src/world_state.cpp.o
+
+src/world_state.i: src/world_state.cpp.i
+
+.PHONY : src/world_state.i
+
+# target to preprocess a source file
+src/world_state.cpp.i:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f map/CMakeFiles/map_server.dir/build.make map/CMakeFiles/map_server.dir/src/world_state.cpp.i
+.PHONY : src/world_state.cpp.i
+
+src/world_state.s: src/world_state.cpp.s
+
+.PHONY : src/world_state.s
+
+# target to generate assembly for a file
+src/world_state.cpp.s:
+	cd /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/build && $(MAKE) -f map/CMakeFiles/map_server.dir/build.make map/CMakeFiles/map_server.dir/src/world_state.cpp.s
+.PHONY : src/world_state.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -254,6 +281,9 @@ help:
 	@echo "... src/server.o"
 	@echo "... src/server.i"
 	@echo "... src/server.s"
+	@echo "... src/world_state.o"
+	@echo "... src/world_state.i"
+	@echo "... src/world_state.s"
 .PHONY : help
 
 
