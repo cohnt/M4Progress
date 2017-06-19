@@ -8,10 +8,11 @@ var positionOffset = [0, 0]; //This is used to keep the robot's location on the 
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
 var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
+var rangesFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 
 var canvas; //A global variable 
 var context;
-var ws;
+var ws; //TEST
 
 function serverMessage(msg) {
 	var splitMsg = msg.split("|"); //The message is pipe-delimited, as commas are used in the range list.
@@ -51,9 +52,6 @@ function setup() { //Call this to get the program going.
 function mainLoop(message) {
 	var data = new serverMessage(message);
 
-	if(pointsRecord.length != 0) {
-		console.log(distanceSquared(data.position, pointsRecord[pointsRecord.length-1]));
-	}
 	if(pointsRecord.length == 0 || distanceSquared(data.position, pointsRecord[pointsRecord.length-1]) > minPositionRecordDistance) {
 		pointsRecord.push(data.position.slice(0,2)); //Store the next point to the list.
 	}
@@ -157,9 +155,14 @@ function drawRangesFill(r) {
 	context.beginPath();
 	context.moveTo(0, 0);
 
+	var smallestDSquared = Infinity;
+
 	for(var i=1; i<r.length; ++i) {
-		context.lineTo(r[i][0], r[i][1]);
+		if(distanceSquared(r[i], [0, 0, 0]) > rangesFillMinDistanceSquaredFromCenter) {
+			context.lineTo(r[i][0], r[i][1]);
+		}
 	}
+	console.log(smallestDSquared);
 	context.lineTo(0, 0);
 	
 	context.fillStyle = "white";
