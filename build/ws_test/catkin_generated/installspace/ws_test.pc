@@ -1,8 +1,0 @@
-prefix=/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/install
-
-Name: ws_test
-Description: Description of ws_test
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/install/lib 
-Requires: 

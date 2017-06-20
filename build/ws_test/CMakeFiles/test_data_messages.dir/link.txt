@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++0x    CMakeFiles/test_data_messages.dir/src/test_data_message.cpp.o  -o /home/tommy/Documents/Programming/Work/Dr_Jenkins/ros_ws/devel/lib/ws_test/test_data_messages -rdynamic 
