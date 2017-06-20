@@ -8,8 +8,8 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <math.h>
+#include <mutex>
 
-#include "data_message.h"
 #include "world_state.h"
 
 typedef websocketpp::server<websocketpp::config::asio> server;
@@ -25,13 +25,16 @@ bool serverStarted = false; //Has the server started yet?
 geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
 worldState lastWorldState; //The most recent world state.
+std::mutex mutex;
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
+		mutex.lock();
 		char *outgoingMessage = lastWorldState.stringify();
 		std::cout << outgoingMessage << std::endl;
 		s->send(hdl, outgoingMessage, msg->get_opcode());
 		free(outgoingMessage);
+		mutex.unlock();
 	}
 	catch (const websocketpp::lib::error_code& e) {
 		std::cout << "Echo failed because: " << e << "(" << e.message() << ")" << std::endl;
@@ -39,36 +42,20 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 }
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
 	if(needOdom != false) {
+		mutex.lock();
 		needOdom = false;
-
 		lastOdomPose = msg->pose.pose;
-
-		const float x = lastOdomPose.position.x;
-		const float y = lastOdomPose.position.y;
-		const float z = lastOdomPose.position.z;
-
-//		std::cout << x << "," << y << "," << z << ",\n";
+		mutex.unlock();
 	}
 }
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	if(needOdom != true) {
+		mutex.lock();
 		needOdom = true;
-
 		lastBaseScan = *msg;
 		lastWorldState.newBaseScan(lastBaseScan);
 		lastWorldState.newOdometry(lastOdomPose);
-
-		const float angle_min = lastBaseScan.angle_min;
-		const float angle_max = lastBaseScan.angle_max;
-		const float angle_increment = lastBaseScan.angle_increment;
-		const std::vector<float> ranges = lastBaseScan.ranges;
-
-//		std::cout << "angle_min:" << angle_min << " angle_max:" << angle_max << " angle_increment:" << angle_increment << "\n";
-//		std::cout << "ranges:" << ranges[0];
-		for(int i=0; i<ranges.size(); ++i) {
-//			std::cout << "," << ranges[i];
-		}
-//		std::cout << "\n";
+		mutex.unlock();
 	}
 }
 
