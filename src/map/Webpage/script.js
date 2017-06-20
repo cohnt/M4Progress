@@ -1,16 +1,15 @@
-var robotMarkerRadius = 0.3; //The radius of the circle that marks the robot's location, in meters.
+//Constants
+var robotChassisRadius = 0.3; //The radius of the circle that marks the robot's location, in meters.
 var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing which direction the robot is pointing. This is the angle between the centerline and one of the sides.
-var pointsRecord = []; //This record the list of 2D point where the robot has been, so the program can draw lines between them.
-var zoom = 128; //As the path and information get bigger, it's useful to zoom out.
-                //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
-                //In other words, the units are pixels per meter.
-var positionOffset = [0, 0]; //This is used to keep the robot's location on the screen centered.
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
 var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
+var zoomScrollConstant = 120 * 4; //This depends on which mouse you use. For my mouse, one scrolled "tic" has |e.wheelDelta|=120.
+var cylonModeCycleTime = 2.5 * 1000; //How long the visual scan takes to do a complete loop in cylon mode, in milliseconds.
+
 var styles = {
 	robotMarker: "#000000",
 	robotPath: "#888888",
@@ -18,13 +17,24 @@ var styles = {
 	wallFill: "#ffffff",
 	background: "#eeeeee",
 	robotFOV: "#42f4e2", //A sort of electic blue.
+	cylon: "#ff5555"
 };
-var zoomScrollConstant = 120*4; //This depends on which mouse you use. For my mouse, one scrolled "tic" has |e.wheelDelta|=120.
 
+//Global variables.
 var canvas; //A global variable 
 var context;
-var ws; //TEST
+var ws;
+var page = {}; //An object which holds all grabbed html elements from the page in one nice, central location.
+var path = []; //This record the list of 2D point where the robot has been, so the program can draw lines between them.
+var zoom = 128; //As the path and information get bigger, it's useful to zoom out.
+                //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
+                //In other words, the units are pixels per meter.
+var cylonMode = false;
+var cylonModeStartTime;
+var lastDataMessage;
+var firstTransmission = true;
 
+//Classes
 function serverMessage(msg) {
 	var splitMsg = msg.split("|"); //The message is pipe-delimited, as commas are used in the range list.
 
@@ -64,28 +74,34 @@ function serverMessage(msg) {
 	}
 }
 
-function setup() { //Call this to get the program going.
-	canvas = document.getElementById("map"); //Grab the HTMl of the canvas.
-	canvas.style.transform = "matrix(0, -1, 1, 0, 0, 0)"; //Rotate the canvas so up is forward, like in a map.
-	context = canvas.getContext("2d"); //All canvas drawings are done through a context.
-	context.fillStyle = "white"; //Set the fill style of closed shapes on the canvas to white.
+//Functions
+function setup() {
+	page.canvas = document.getElementById("map"); //Grab the HTMl of the canvas.
+	page.connectButton = document.getElementById("connect");
+	page.cylonModeButton = document.getElementById("cylon");
+
+	page.canvas.style.transform = "matrix(0, -1, 1, 0, 0, 0)"; //Rotate the canvas so up is forward, like in a map.
+	context = page.canvas.getContext("2d"); //All canvas drawings are done through a context.
 	context.beginPath(); //This starts a path so lines can be drawn.
-	document.getElementById("connect").addEventListener("click", startServerConnection);
+
+	page.connectButton.addEventListener("click", startServerConnection);
+	page.cylonModeButton.addEventListener("click", toggleCylonMode);
+
 	document.addEventListener("wheel", function(event) { zoomed(event); });
 }
-function mainLoop(message) {
-	var data = new serverMessage(message);
+function mainLoop() {
+	var data = lastDataMessage;
 
-	if(pointsRecord.length == 0 || distanceSquared(data.position, pointsRecord[pointsRecord.length-1]) > minPositionRecordDistance) {
-		pointsRecord.push(data.position.slice(0,2)); //Store the next point to the list.
+	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
+		path.push(data.position.slice(0,2)); //Store the next point to the list.
 	}
 
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
 	context.fillStyle = styles.background; //Fill the screen (by default) with grey.
 	context.setTransform(1, 0, 0, 1, 0, 0); //Reset all transforms on the context.
-	context.clearRect(0, 0, canvas.width, canvas.height); //Clear the canvas.
-	context.fillRect(0, 0, canvas.width, canvas.height); //Give the canvas its default background.
-	context.transform(1, 0, 0, 1, canvas.width/2, canvas.height/2); //Put 0, 0 in the center of the canvas.
+	context.clearRect(0, 0, page.canvas.width, page.canvas.height); //Clear the canvas.
+	context.fillRect(0, 0, page.canvas.width, page.canvas.height); //Give the canvas its default background.
+	context.transform(1, 0, 0, 1, page.canvas.width/2, page.canvas.height/2); //Put 0, 0 in the center of the canvas.
 	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
@@ -100,8 +116,11 @@ function mainLoop(message) {
 	drawRobotMarker();
 	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
 	drawRobotFrameOfView(data.walls);
+	if(cylonMode) {
+		drawCylonRadar(data.walls);
+	}
 
-	requestAnimationFrame(sendDataRequest);
+	requestAnimationFrame(mainLoop);
 }
 
 function sendDataRequest() {
@@ -124,7 +143,12 @@ function quaternionToEuler(quat) { //This takes the quaternion array [x, y, z, w
 function startServerConnection() {
 	ws = new WebSocket(document.getElementById("serverAddress").value); //This creates the websocket object.
 	ws.onmessage = function(event) { //When a message is received...
-		mainLoop(event.data); //Go into the main loop and use the data.
+		lastDataMessage = new serverMessage(event.data); //Update the last data message.
+		requestAnimationFrame(sendDataRequest);
+		if(firstTransmission) {
+			firstTransmission = false;
+			mainLoop();
+		}
 	}
 	ws.onopen = function() {
 		console.log("Connection opened.");
@@ -133,10 +157,10 @@ function startServerConnection() {
 }
 function drawRobotPath() {
 	context.strokeStyle = styles.robotPath
-	context.moveTo(pointsRecord[0][0], pointsRecord[0][1]); //Move to the first point in the path.
+	context.moveTo(path[0][0], path[0][1]); //Move to the first point in the path.
 	context.beginPath();
-	for(var i=1; i<pointsRecord.length; ++i) { //This draws lines from point i to point i-1
-		context.lineTo(pointsRecord[i][0], pointsRecord[i][1]); //Draw a line to the next point.
+	for(var i=1; i<path.length; ++i) { //This draws lines from point i to point i-1
+		context.lineTo(path[i][0], path[i][1]); //Draw a line to the next point.
 		context.stroke();
 	}
 }
@@ -179,28 +203,47 @@ function drawWallsFill(walls) {
 function drawRobotMarker() {
 	context.strokeStyle = styles.robotMarker;
 	context.beginPath();
-	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
+	context.arc(0, 0, robotChassisRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
 	context.stroke();
 
 	//These lines draw a triangle inside the circle, to show the direction of the robot.
 	context.beginPath();
-	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.moveTo(robotChassisRadius*Math.cos(0), robotChassisRadius*Math.sin(0));
+	context.lineTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.stroke();
-	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.moveTo(robotChassisRadius*Math.cos(0), robotChassisRadius*Math.sin(0));
+	context.lineTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.stroke();
-	context.moveTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.moveTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.lineTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
 	context.stroke();
 }
 function drawRobotFrameOfView(walls) {
-	context.strokeStyle = styles.robotFOV;
+	context.strokeStyle = cylonMode ? styles.cylon : styles.robotFOV;
 	context.beginPath();
 	context.moveTo(0, 0);
 	context.lineTo(walls[0][0], walls[0][1]);
 	context.moveTo(0, 0);
 	context.lineTo(walls[walls.length-1][0], walls[walls.length-1][1]);
+	context.stroke();
+}
+function drawCylonRadar(walls) {
+	var t = window.performance.now();
+	var dt = (t - cylonModeStartTime) % cylonModeCycleTime;
+	var i = dt - (cylonModeCycleTime/2);
+	if(i <= 0) {
+		i += (cylonModeCycleTime/2);
+	}
+	else {
+		i = (cylonModeCycleTime/2)-i;
+	}
+	i /= (cylonModeCycleTime/2);
+	i *= walls.length;
+	i = Math.floor(i);
+	context.strokeStyle = styles.cylon;
+	context.beginPath();
+	context.moveTo(0, 0);
+	context.lineTo(walls[i][0], walls[i][1]);
 	context.stroke();
 }
 function distanceSquared(p1, p2) {
@@ -216,5 +259,15 @@ function zoomed(e) {
 	zoom *= zoomMultiplier;
 	console.log(Math.log2(zoom));
 }
+function toggleCylonMode() {
+	cylonMode = !cylonMode;
+	if(cylonMode) {
+		cylonModeStartTime = window.performance.now();
+	}
+	else {
+		cylonModeStartTime = NaN;
+	}
+}
 
+//Executed Code
 setup();
