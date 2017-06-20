@@ -9,7 +9,7 @@ var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close point
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
 var zoomScrollConstant = 120 * 4; //This depends on which mouse you use. For my mouse, one scrolled "tic" has |e.wheelDelta|=120.
 var cylonModeCycleTime = 2.5 * 1000; //How long the visual scan takes to do a complete loop in cylon mode, in milliseconds.
-
+var cylonModeNumLines = 6; //How many wall segments are highlighted by the cylon radar gradient.
 var styles = {
 	robotMarker: "#000000",
 	robotPath: "#888888",
@@ -17,7 +17,7 @@ var styles = {
 	wallFill: "#ffffff",
 	background: "#eeeeee",
 	robotFOV: "#42f4e2", //A sort of electic blue.
-	cylon: "#ff5555"
+	cylon: ["#ff5555", "#ff7777", "#ff9999", "#ffaaaa", "#ffcccc", "#ffeeee"]
 };
 
 //Global variables.
@@ -117,7 +117,9 @@ function mainLoop() {
 	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
 	drawRobotFrameOfView(data.walls);
 	if(cylonMode) {
+		context.lineWidth *= 2;
 		drawCylonRadar(data.walls);
+		context.lineWidth /= 2;
 	}
 
 	requestAnimationFrame(mainLoop);
@@ -231,20 +233,32 @@ function drawCylonRadar(walls) {
 	var t = window.performance.now();
 	var dt = (t - cylonModeStartTime) % cylonModeCycleTime;
 	var i = dt - (cylonModeCycleTime/2);
+	var directionModifier;
+
 	if(i <= 0) {
 		i += (cylonModeCycleTime/2);
+		directionModifier = 1;
 	}
 	else {
 		i = (cylonModeCycleTime/2)-i;
+		directionModifier = -1;
 	}
+
 	i /= (cylonModeCycleTime/2);
 	i *= walls.length;
 	i = Math.floor(i);
-	context.strokeStyle = styles.cylon;
-	context.beginPath();
-	context.moveTo(0, 0);
-	context.lineTo(walls[i][0], walls[i][1]);
-	context.stroke();
+	
+	for(var n=0; n<cylonModeNumLines; ++n) {
+		var k = i + (n*directionModifier);
+		if(k > 0 && k < walls.length) {
+			context.strokeStyle = styles.cylon[(cylonModeNumLines-n)-1];
+			console.log(cylonModeNumLines-n);
+			context.beginPath();
+			context.moveTo(0, 0);
+			context.lineTo(walls[k][0], walls[k][1]);
+			context.stroke();
+		}
+	}
 }
 function distanceSquared(p1, p2) {
 	//Useful for quickly computing distance thresholds.
