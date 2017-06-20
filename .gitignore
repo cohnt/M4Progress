@@ -38,7 +38,7 @@ Thumbs.db
 
 # My stuff #
 ############
-*.mp4
 [Bb]uild/
 [Dd]evel/
 [Ii]nstall/
+src/map/Videos/
