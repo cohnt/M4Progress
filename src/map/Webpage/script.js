@@ -1,7 +1,7 @@
 var robotMarkerRadius = 0.3; //The radius of the circle that marks the robot's location, in meters.
 var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing which direction the robot is pointing. This is the angle between the centerline and one of the sides.
 var pointsRecord = []; //This record the list of 2D point where the robot has been, so the program can draw lines between them.
-var zoom = 100; //As the path and information get bigger, it's useful to zoom out.
+var zoom = 128; //As the path and information get bigger, it's useful to zoom out.
                 //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
                 //In other words, the units are pixels per meter.
 var positionOffset = [0, 0]; //This is used to keep the robot's location on the screen centered.
@@ -16,8 +16,10 @@ var styles = {
 	robotPath: "#888888",
 	wallLines: "#000000",
 	wallFill: "#ffffff",
-	background: "#eeeeee"
+	background: "#eeeeee",
+	robotFOV: "#42f4e2", //A sort of electic blue.
 };
+var zoomScrollConstant = 120*4; //This depends on which mouse you use. For my mouse, one scrolled "tic" has |e.wheelDelta|=120.
 
 var canvas; //A global variable 
 var context;
@@ -69,6 +71,7 @@ function setup() { //Call this to get the program going.
 	context.fillStyle = "white"; //Set the fill style of closed shapes on the canvas to white.
 	context.beginPath(); //This starts a path so lines can be drawn.
 	document.getElementById("connect").addEventListener("click", startServerConnection);
+	document.addEventListener("wheel", function(event) { zoomed(event); });
 }
 function mainLoop(message) {
 	var data = new serverMessage(message);
@@ -87,7 +90,7 @@ function mainLoop(message) {
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 
 	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
-	drawWalls(data.walls, data.minAngle, data.ranges, data.incrementAngle);
+	drawWalls(data.walls);
 	context.transform(1, 0, 0, 1, -lidarForwardDistance, 0);
 	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
 	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
@@ -95,6 +98,8 @@ function mainLoop(message) {
 	context.transform(1, 0, 0, 1, data.position[0], data.position[1]);
 	context.transform(Math.cos(data.angle), Math.sin(data.angle), -Math.sin(data.angle), Math.cos(data.angle), 0, 0);
 	drawRobotMarker();
+	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
+	drawRobotFrameOfView(data.walls);
 
 	requestAnimationFrame(sendDataRequest);
 }
@@ -125,24 +130,6 @@ function startServerConnection() {
 		console.log("Connection opened.");
 		sendDataRequest();
 	}
-}
-function drawRobotMarker() {
-	context.strokeStyle = styles.robotMarker;
-	context.beginPath();
-	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
-	context.stroke();
-
-	//These lines draw a triangle inside the circle, to show the direction of the robot.
-	context.beginPath();
-	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-	context.moveTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
 }
 function drawRobotPath() {
 	context.strokeStyle = styles.robotPath
@@ -189,6 +176,33 @@ function drawWallsFill(walls) {
 	context.closePath();
 	context.fill();
 }
+function drawRobotMarker() {
+	context.strokeStyle = styles.robotMarker;
+	context.beginPath();
+	context.arc(0, 0, robotMarkerRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
+	context.stroke();
+
+	//These lines draw a triangle inside the circle, to show the direction of the robot.
+	context.beginPath();
+	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
+	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.stroke();
+	context.moveTo(robotMarkerRadius*Math.cos(0), robotMarkerRadius*Math.sin(0));
+	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.stroke();
+	context.moveTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.lineTo(robotMarkerRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotMarkerRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.stroke();
+}
+function drawRobotFrameOfView(walls) {
+	context.strokeStyle = styles.robotFOV;
+	context.beginPath();
+	context.moveTo(0, 0);
+	context.lineTo(walls[0][0], walls[0][1]);
+	context.moveTo(0, 0);
+	context.lineTo(walls[walls.length-1][0], walls[walls.length-1][1]);
+	context.stroke();
+}
 function distanceSquared(p1, p2) {
 	//Useful for quickly computing distance thresholds.
 	var sum = 0;
@@ -196,6 +210,11 @@ function distanceSquared(p1, p2) {
 		sum += Math.pow(p2[i]-p1[i], 2);
 	}
 	return sum;
+}
+function zoomed(e) {
+	var zoomMultiplier = Math.pow(2, e.wheelDelta/zoomScrollConstant); //Raising 2 to the power of wheelDelta changes it from a positive/negative number to a number that is greater than or less than 1, and so it's fit for a scale factor.
+	zoom *= zoomMultiplier;
+	console.log(Math.log2(zoom));
 }
 
 setup();
