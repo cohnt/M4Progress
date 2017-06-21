@@ -5,7 +5,7 @@ div {
 	display: inline-block;
 }
 textarea {
-	vertical-align: middle;
+	vertical-align: bottom;
 }
 pre {
 	margin: 2px;
@@ -25,9 +25,16 @@ textarea.oneLineInput {
 
 div#connect {
 	background-color: #aaccff;
-	padding: 10px;
+	padding: 20px;
+	vertical-align: middle;
 }
 div#cylon {
 	background-color: #ff0000;
-	padding: 10px;
+	padding: 20px;
+	vertical-align: middle;
+}
+div#relock {
+	background-color: #55ff55;
+	padding: 11px 20px;
+	vertical-align: middle;
 }

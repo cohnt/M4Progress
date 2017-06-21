@@ -43,11 +43,16 @@ var lastDataMessage;
 var firstTransmission = true;
 var keys = {};
 var t0;
-var currentUserDisplayTransform = [[zoom, 0, 0], [0, zoom, 0], [0, 0, 1]]; //By default, it's the zoom matrix for the initial zoom level.
+var currentUserDisplayTransform = [
+	[zoom, 0, 0],
+	[0, zoom, 0],
+	[0, 0, 1]
+]; //By default, it's the zoom matrix for the initial zoom level.
 var rotating = false;
 var panning = false;
 var mouseCurrentPosition = [0, 0];
 var mouseLastPosition = [0, 0];
+var locked = true;
 
 //Classes
 function serverMessage(msg) {
@@ -100,6 +105,7 @@ function setup() {
 	page.canvas = document.getElementById("map"); //Grab the HTMl of the canvas.
 	page.connectButton = document.getElementById("connect");
 	page.cylonModeButton = document.getElementById("cylon");
+	page.relockButton = document.getElementById("relock");
 
 	page.canvas.style.transform = "matrix(0, -1, 1, 0, 0, 0)"; //Rotate the canvas so up is forward, like in a map.
 	context = page.canvas.getContext("2d"); //All canvas drawings are done through a context.
@@ -113,6 +119,7 @@ function setup() {
 	document.body.addEventListener("mousemove", function(event) { mouseMoved(event); });
 	page.canvas.addEventListener("mousedown", function(event) { canvasClicked(event); });
 	document.body.addEventListener("mouseup", function(event) { clickReleased(event); });
+	page.relockButton.addEventListener("click", relock);
 }
 function mainLoop() {
 	var t = window.performance.now();
@@ -352,7 +359,10 @@ function toggleCylonMode() {
 function keydown(e) {
 	var keycode = e.which;
 	keys[keycode] = true;
-	rotating = updateRotation()
+	rotating = updateRotation();
+	if(rotating) {
+		locked = false;
+	}
 }
 function keyup(e) {
 	var keycode = e.which;
@@ -405,6 +415,7 @@ function mouseMoved(e) {
 	mouseCurrentPosition = [e.clientX, window.innerHeight - e.clientY];
 	var delta = numeric.add(mouseCurrentPosition, numeric.dot(-1, mouseLastPosition));
 	if(panning) {
+		locked = false;
 		var transformMatrix = [
 			[1, 0, delta[1]],
 			[0, 1, -delta[0]],
@@ -422,12 +433,30 @@ function clickReleased(e) {
 	panning = false;
 }
 function computeViewportTransform(dt, data) {
-	var m = makeIdentityMatrix();
-	computeRotationTransform(dt);
-	m = numeric.dot(currentUserDisplayTransform, m);
-	var posMatrix = makeTranslationMatrix(data.position[0], data.position[1]);
-	m = numeric.dot(posMatrix, m);
-	return m;
+	if(!locked) {
+		var m = makeIdentityMatrix();
+		computeRotationTransform(dt);
+		m = numeric.dot(currentUserDisplayTransform, m);
+		printMatrix(m);
+		return m;
+	}
+	else {
+		var m = makeIdentityMatrix();
+		var posMatrix = makeTranslationMatrix(-data.position[0], -data.position[1]);
+		m = numeric.dot(posMatrix, m);
+		var rotMatrix = makeRotationMatrix(-data.angle);
+		m = numeric.dot(rotMatrix, m);
+		var zoomMatrix = [
+			[zoom, 0, 0],
+			[0, zoom, 0],
+			[0, 0, 1]
+		];
+		m = numeric.dot(zoomMatrix, m);
+		printMatrix(m);
+		console.log(data.angle);
+		currentUserDisplayTransform = m.slice(0);
+		return m;
+	}
 }
 function makeTranslationMatrix(dx, dy) {
 	return [
@@ -443,7 +472,10 @@ function makeIdentityMatrix() {
 		[0, 0, 1]
 	];
 }
-
+function relock() {
+	currentUserDisplayTransform = [[zoom, 0, 0], [0, zoom, 0], [0, 0, 1]];
+	locked = true;
+}
 
 //Executed Code
 setup();
