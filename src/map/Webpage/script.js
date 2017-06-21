@@ -204,8 +204,8 @@ function drawWalls(walls) {
 		}
 		else {
 			context.stroke();
-			context.moveTo(walls[i][0], walls[i][1]);
 			context.beginPath();
+			context.moveTo(walls[i][0], walls[i][1]);
 		}
 	}
 	context.stroke();
@@ -227,6 +227,22 @@ function drawWallsFill(walls) {
 	context.lineTo(0, 0);
 	
 	context.fillStyle = styles.wallFill;
+	context.closePath();
+	context.fill();
+
+	context.beginPath();
+	context.moveTo(0, 0);
+	context.lineTo(walls[0][0], walls[0][1]);
+	context.lineTo(walls[1][0], walls[1][1]);
+	context.lineTo(0, 0);
+	context.closePath();
+	context.fill();
+
+	context.beginPath();
+	context.moveTo(0, 0);
+	context.lineTo(walls[walls.length-2][0], walls[walls.length-2][1]);
+	context.lineTo(walls[walls.length-1][0], walls[walls.length-1][1]);
+	context.lineTo(0, 0);
 	context.closePath();
 	context.fill();
 }
