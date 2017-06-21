@@ -19,6 +19,12 @@ var styles = {
 	robotFOV: "#42f4e2", //A sort of electic blue.
 	cylon: ["#ff5555", "#ff7777", "#ff9999", "#ffaaaa", "#ffcccc", "#ffeeee"]
 };
+var userRotationRadPerSec = Math.PI;
+var keycodes = {
+	q: 81,
+	e: 69
+}
+var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milliseconds the transformation update will accept for user-inputted rotation transformations.
 
 //Global variables.
 var canvas; //A global variable 
@@ -33,6 +39,11 @@ var cylonMode = false;
 var cylonModeStartTime;
 var lastDataMessage;
 var firstTransmission = true;
+var keys = {};
+var t0;
+var currentUserTransformationMatrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; //By default, it's the identity matrix.
+var rotating = false;
+var panning = false;
 
 //Classes
 function serverMessage(msg) {
@@ -86,11 +97,18 @@ function setup() {
 
 	page.connectButton.addEventListener("click", startServerConnection);
 	page.cylonModeButton.addEventListener("click", toggleCylonMode);
+	document.addEventListener("keydown", function(event) { keydown(event); });
+	document.addEventListener("keyup", function(event) { keyup(event); });
 
 	document.addEventListener("wheel", function(event) { zoomed(event); });
 }
 function mainLoop() {
+	var t = window.performance.now();
+	var dt = t - t0; //In milliseconds
+	t0 = t;
 	var data = lastDataMessage;
+
+	computeUserTransforms(dt);
 
 	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
 		path.push(data.position.slice(0,2)); //Store the next point to the list.
@@ -104,6 +122,14 @@ function mainLoop() {
 	context.transform(1, 0, 0, 1, page.canvas.width/2, page.canvas.height/2); //Put 0, 0 in the center of the canvas.
 	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
+	context.transform(
+		currentUserTransformationMatrix[0][0],
+		currentUserTransformationMatrix[1][0],
+		currentUserTransformationMatrix[0][1],
+		currentUserTransformationMatrix[1][1],
+		currentUserTransformationMatrix[0][2],
+		currentUserTransformationMatrix[1][2]
+	);
 
 	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
 	drawWalls(data.walls);
@@ -118,7 +144,7 @@ function mainLoop() {
 	drawRobotFrameOfView(data.walls);
 	if(cylonMode) {
 		context.lineWidth *= 2;
-		drawCylonRadar(data.walls);
+		drawCylonRadar(data.walls, t);
 		context.lineWidth /= 2;
 	}
 
@@ -149,7 +175,8 @@ function startServerConnection() {
 		requestAnimationFrame(sendDataRequest);
 		if(firstTransmission) {
 			firstTransmission = false;
-			mainLoop();
+			t0 = window.performance.now();
+			requestAnimationFrame(mainLoop);
 		}
 	}
 	ws.onopen = function() {
@@ -229,10 +256,9 @@ function drawRobotFrameOfView(walls) {
 	context.lineTo(walls[walls.length-1][0], walls[walls.length-1][1]);
 	context.stroke();
 }
-function drawCylonRadar(walls) {
-	var t = window.performance.now();
-	var dt = (t - cylonModeStartTime) % cylonModeCycleTime;
-	var i = dt - (cylonModeCycleTime/2);
+function drawCylonRadar(walls, t) {
+	var dtCylon = (t - cylonModeStartTime) % cylonModeCycleTime;
+	var i = dtCylon - (cylonModeCycleTime/2);
 	var directionModifier;
 
 	if(i <= 0) {
@@ -281,6 +307,48 @@ function toggleCylonMode() {
 	else {
 		cylonModeStartTime = NaN;
 	}
+}
+function keydown(e) {
+	var keycode = e.which;
+	keys[keycode] = true;
+	rotating = updateRotation()
+}
+function keyup(e) {
+	var keycode = e.which;
+	keys[keycode] = false;
+	rotating = updateRotation()
+}
+function updateRotation() {
+	var q = keys[keycodes.q];
+	var e = keys[keycodes.e];
+	return q ^ e;
+}
+function computeUserTransforms(dt) {
+	if(rotating) {
+		if(dt > maxUserTransformationTimeElapsed) {
+			return;
+		}
+		var dT;
+		dT = (dt/1000) * userRotationRadPerSec;
+		dT *= (keys[keycodes.e] ? -1 : 1);
+		var nextTransform = makeRotationMatrix(dT);
+		currentUserTransformationMatrix = numeric.dot(nextTransform, currentUserTransformationMatrix);
+	}
+	else if(panning) {
+		//
+	}
+}
+function makeRotationMatrix(theta) {
+	var c = Math.cos(theta);
+	var s = Math.sin(theta);
+	return [
+		[c, -s, 0],
+		[s, c, 0],
+		[0, 0, 1]
+	];
+}
+function printMatrix(matrix) {
+	//
 }
 
 //Executed Code
