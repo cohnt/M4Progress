@@ -3,6 +3,7 @@ var robotChassisRadius = 0.3; //The radius of the circle that marks the robot's 
 var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing which direction the robot is pointing. This is the angle between the centerline and one of the sides.
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
+                                //Remember to change this value in the C++ code as well!
 var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
@@ -88,7 +89,8 @@ function serverMessage(msg) {
 		}
 		else {
 			this.walls[i].push(1);
-			this.walls[i] = numeric.dot(makeTranslationMatrix(0, lidarForwardDistance), this.walls[i]);
+			this.walls[i] = numeric.dot(makeRotationMatrix(this.angle), this.walls[i]);
+			this.walls[i] = numeric.dot(makeTranslationMatrix(this.position[0], this.position[1]), this.walls[i]);
 		}
 	}
 }
@@ -120,11 +122,13 @@ function mainLoop() {
 
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
 	context.fillStyle = styles.background; //Fill the screen (by default) with grey.
+
 	context.setTransform(1, 0, 0, 1, 0, 0);
 	context.clearRect(0, 0, page.canvas.width, page.canvas.height);
 	context.fillRect(0, 0, page.canvas.width, page.canvas.height);
 	context.transform(1, 0, 0, 1, page.canvas.width/2, page.canvas.height/2);
 	context.transform(1, 0, 0, -1, 0, 0);
+
 	var viewportTransform = computeViewportTransform(dt, data);
 	context.transform(
 		viewportTransform[0][0],
@@ -139,10 +143,10 @@ function mainLoop() {
 		path.push(data.position.slice(0)); //Store the next point to the list.
 	}
 
-	drawWalls(data.walls);
-	drawRobotPath();
-	drawRobotMarker();
-	drawRobotFrameOfView(data.walls);
+	drawWalls(data);
+	drawRobotPath(data.position);
+	drawRobotMarker(data);
+	drawRobotFrameOfView(data);
 	if(cylonMode) {
 		context.lineWidth *= 2;
 		drawCylonRadar(data.walls, t);
@@ -185,92 +189,105 @@ function startServerConnection() {
 		sendDataRequest();
 	}
 }
-function drawRobotPath() {
+function drawRobotPath(pos) {
 	context.strokeStyle = styles.robotPath
 	context.moveTo(path[0][0], path[0][1]); //Move to the first point in the path.
 	context.beginPath();
 	for(var i=1; i<path.length; ++i) { //This draws lines from point i to point i-1
 		context.lineTo(path[i][0], path[i][1]); //Draw a line to the next point.
-		context.stroke();
 	}
+	context.stroke();
 }
-function drawWalls(walls) {
+function drawWalls(data) {
 	context.strokeStyle = styles.wallLines;
 	context.beginPath();
-	context.moveTo(walls[0][0], walls[0][1]);
-	for(var i=1; i<walls.length; ++i) {
-		if(distanceSquared(walls[i], walls[i-1]) < maxWallRenderConnectedDistance) {
-			context.lineTo(walls[i][0], walls[i][1]);
+	context.moveTo(data.walls[0][0], data.walls[0][1]);
+	for(var i=1; i<data.walls.length; ++i) {
+		if(distanceSquared(data.walls[i], data.walls[i-1]) < maxWallRenderConnectedDistance) {
+			context.lineTo(data.walls[i][0], data.walls[i][1]);
 		}
 		else {
 			context.stroke();
 			context.beginPath();
-			context.moveTo(walls[i][0], walls[i][1]);
+			context.moveTo(data.walls[i][0], data.walls[i][1]);
 		}
 	}
 	context.stroke();
-	drawWallsFill(walls);
+	drawWallsFill(data);
 }
 function addRangeLineSegment(p0, p1) {
 	context.moveTo(p0[0], p0[1]);
 	context.lineTo(p1[0], p1[1]);
 }
-function drawWallsFill(walls) {
+function drawWallsFill(data) {
 	context.beginPath();
-	context.moveTo(0, 0);
+	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 
-	for(var i=1; i<walls.length; ++i) {
-		if(distanceSquared(walls[i], [0, 0, 0]) > wallsFillMinDistanceSquaredFromCenter) {
-			context.lineTo(walls[i][0], walls[i][1]);
+	for(var i=1; i<data.walls.length; ++i) {
+		if(distanceSquared(data.walls[i], [0, 0, 0]) > wallsFillMinDistanceSquaredFromCenter) {
+			context.lineTo(data.walls[i][0], data.walls[i][1]);
 		}
 	}
-	context.lineTo(0, 0);
+	context.lineTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 	
 	context.fillStyle = styles.wallFill;
 	context.closePath();
 	context.fill();
 
 	context.beginPath();
-	context.moveTo(0, 0);
-	context.lineTo(walls[0][0], walls[0][1]);
-	context.lineTo(walls[1][0], walls[1][1]);
-	context.lineTo(0, 0);
+	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
+	context.lineTo(data.walls[0][0], data.walls[0][1]);
+	context.lineTo(data.walls[1][0], data.walls[1][1]);
+	context.lineTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 	context.closePath();
 	context.fill();
 
 	context.beginPath();
-	context.moveTo(0, 0);
-	context.lineTo(walls[walls.length-2][0], walls[walls.length-2][1]);
-	context.lineTo(walls[walls.length-1][0], walls[walls.length-1][1]);
-	context.lineTo(0, 0);
+	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
+	context.lineTo(data.walls[data.walls.length-2][0], data.walls[data.walls.length-2][1]);
+	context.lineTo(data.walls[data.walls.length-1][0], data.walls[data.walls.length-1][1]);
+	context.lineTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 	context.closePath();
 	context.fill();
 }
-function drawRobotMarker() {
+function drawRobotMarker(data) {
+	var pos = data.position.slice(0);
+
 	context.strokeStyle = styles.robotMarker;
 	context.beginPath();
-	context.arc(0, 0, robotChassisRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
+	context.arc(pos[0], pos[1], robotChassisRadius, 0, 2*Math.PI); //This will draw a circle around the center for the robot marker.
 	context.stroke();
 
 	//These lines draw a triangle inside the circle, to show the direction of the robot.
+	var robotMarkerPoints = [];
+	for(var i=0; i<4; ++i) {
+		robotMarkerPoints.push([robotChassisRadius, 0, 1]);
+	}
+	var triangleRotateMatrix1 = makeRotationMatrix(Math.PI+robotMarkerArrowAngle);
+	var triangleRotateMatrix2 = makeRotationMatrix(Math.PI-robotMarkerArrowAngle);
+	robotMarkerPoints[1] = numeric.dot(triangleRotateMatrix1, robotMarkerPoints[1]);
+	robotMarkerPoints[2] = numeric.dot(triangleRotateMatrix2, robotMarkerPoints[2]);
+	var robotRotationMatrix = makeRotationMatrix(data.angle);
+	var robotTranslationMatrix = makeTranslationMatrix(data.position.slice(0, 2)[0], data.position.slice(0, 2)[1]);
+	for(var i=0; i<robotMarkerPoints.length; ++i) {
+		robotMarkerPoints[i] = numeric.dot(robotRotationMatrix, robotMarkerPoints[i]);
+		robotMarkerPoints[i] = numeric.dot(robotTranslationMatrix, robotMarkerPoints[i]);
+	}
+	
 	context.beginPath();
-	context.moveTo(robotChassisRadius*Math.cos(0), robotChassisRadius*Math.sin(0));
-	context.lineTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-	context.moveTo(robotChassisRadius*Math.cos(0), robotChassisRadius*Math.sin(0));
-	context.lineTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.stroke();
-	context.moveTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
-	context.lineTo(robotChassisRadius*Math.cos(Math.PI-robotMarkerArrowAngle), -robotChassisRadius*Math.sin(Math.PI-robotMarkerArrowAngle));
+	context.moveTo(robotMarkerPoints[0][0], robotMarkerPoints[0][1]);
+	for(var i=1; i<robotMarkerPoints.length; ++i) {
+		context.lineTo(robotMarkerPoints[i][0], robotMarkerPoints[i][1]);
+	}
 	context.stroke();
 }
-function drawRobotFrameOfView(walls) {
+function drawRobotFrameOfView(data) {
 	context.strokeStyle = cylonMode ? styles.cylon[0] : styles.robotFOV;
 	context.beginPath();
-	context.moveTo(0, 0);
-	context.lineTo(walls[0][0], walls[0][1]);
-	context.moveTo(0, 0);
-	context.lineTo(walls[walls.length-1][0], walls[walls.length-1][1]);
+	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
+	context.lineTo(data.walls[0][0], data.walls[0][1]);
+	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
+	context.lineTo(data.walls[data.walls.length-1][0], data.walls[data.walls.length-1][1]);
 	context.stroke();
 }
 function drawCylonRadar(walls, t) {
@@ -408,7 +425,7 @@ function computeViewportTransform(dt, data) {
 	var m = makeIdentityMatrix();
 	computeRotationTransform(dt);
 	m = numeric.dot(currentUserDisplayTransform, m);
-	var posMatrix = makeTranslationMatrix(data.position[1], -data.position[0]);
+	var posMatrix = makeTranslationMatrix(data.position[0], data.position[1]);
 	m = numeric.dot(posMatrix, m);
 	return m;
 }

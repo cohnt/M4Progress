@@ -13,33 +13,44 @@ worldState::worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base) {
 	baseScan = base;
 
 	worldState::convertToRobotFrame();
+	worldState::convertToWorldFrame();
 }
 
 void worldState::convertToRobotFrame() {
+	const float lidarForwardDistance = 0.4;
 	float t, tMin, tInc;
 	tMin = baseScan.angle_min;
 	tInc = baseScan.angle_increment;
 	t = tMin;
 	for(int i=0; i<baseScan.ranges.size(); ++i) {
 		t += tInc;
-		walls[i][0] = baseScan.ranges[i]*cos(t); walls[i][1] = -1*baseScan.ranges[i]*sin(t);
+		walls[i][0] = baseScan.ranges[i]*cos(t)+lidarForwardDistance; walls[i][1] = -1*baseScan.ranges[i]*sin(t);
 	}
 	for(int i=baseScan.ranges.size(); i<1000; ++i) {
 		walls[i][0] = odometry.position.x;
 		walls[i][1] = odometry.position.y;
 	}
 }
-
+float worldState::convertToWorldFrame() {
+	float theta = static_cast<float>(atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z)))));
+	for(int i=0; i<sizeof(walls)/sizeof(walls[0]); ++i) {
+		walls[i][0] = (walls[i][0] * cos(theta)) - (walls[i][1] * sin(theta)) + odometry.position.x;
+		walls[i][1] = (walls[i][0] * sin(theta)) + (walls[i][1] * cos(theta)) + odometry.position.y;
+	}
+	return theta;
+}
 void worldState::newOdometry(geometry_msgs::Pose odom) {
 	odometry = odom;
 	worldState::convertToRobotFrame();
 }
-void worldState::newBaseScan(sensor_msgs::LaserScan base) {
+float worldState::newBaseScan(sensor_msgs::LaserScan base) {
 	baseScan = base;
 	worldState::convertToRobotFrame();
+	float a = worldState::convertToWorldFrame();
+	return a;
 }
 geometry_msgs::Pose worldState::getOdometry() {
-	//
+	//[3]
 	return odometry;
 }
 sensor_msgs::LaserScan worldState::getBaseScan() {

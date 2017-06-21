@@ -31,7 +31,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
 		mutex.lock();
 		char *outgoingMessage = lastWorldState.stringify();
-		std::cout << outgoingMessage << std::endl;
+		//std::cout << outgoingMessage << std::endl;
 		s->send(hdl, outgoingMessage, msg->get_opcode());
 		free(outgoingMessage);
 		mutex.unlock();
@@ -53,7 +53,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		mutex.lock();
 		needOdom = true;
 		lastBaseScan = *msg;
-		lastWorldState.newBaseScan(lastBaseScan);
+		std::cout << lastWorldState.newBaseScan(lastBaseScan) << std::endl;
 		lastWorldState.newOdometry(lastOdomPose);
 		mutex.unlock();
 	}
