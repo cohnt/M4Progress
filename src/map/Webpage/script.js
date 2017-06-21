@@ -42,7 +42,7 @@ var lastDataMessage;
 var firstTransmission = true;
 var keys = {};
 var t0;
-var currentViewportTransform = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; //By default, it's the identity matrix.
+var currentUserDisplayTransform = [[zoom, 0, 0], [0, zoom, 0], [0, 0, 1]]; //By default, it's the zoom matrix for the initial zoom level.
 var rotating = false;
 var panning = false;
 var mouseCurrentPosition = [0, 0];
@@ -53,6 +53,7 @@ function serverMessage(msg) {
 	var splitMsg = msg.split("|"); //The message is pipe-delimited, as commas are used in the range list.
 
 	this.position = splitMsg.slice(0, 2);
+	this.position.push(1);
 	this.quaternion = splitMsg.slice(3, 7);
 	for(var i=0; i<this.position.length; ++i) {
 		this.position[i] = Number(this.position[i]);
@@ -85,6 +86,10 @@ function serverMessage(msg) {
 			this.walls.splice(i, 1);
 			--i;
 		}
+		else {
+			this.walls[i].push(1);
+			this.walls[i] = numeric.dot(makeTranslationMatrix(0, lidarForwardDistance), this.walls[i]);
+		}
 	}
 }
 
@@ -113,40 +118,30 @@ function mainLoop() {
 	t0 = t;
 	var data = lastDataMessage;
 
-	computeRotationTransform(dt);
-	//printMatrix(currentViewportTransform);
-
-	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
-		path.push(data.position.slice(0,2)); //Store the next point to the list.
-	}
-
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
 	context.fillStyle = styles.background; //Fill the screen (by default) with grey.
-	context.setTransform(1, 0, 0, 1, 0, 0); //Reset all transforms on the context.
-	context.clearRect(0, 0, page.canvas.width, page.canvas.height); //Clear the canvas.
-	context.fillRect(0, 0, page.canvas.width, page.canvas.height); //Give the canvas its default background.
-	context.transform(1, 0, 0, 1, page.canvas.width/2, page.canvas.height/2); //Put 0, 0 in the center of the canvas.
-	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
-	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
+	context.setTransform(1, 0, 0, 1, 0, 0);
+	context.clearRect(0, 0, page.canvas.width, page.canvas.height);
+	context.fillRect(0, 0, page.canvas.width, page.canvas.height);
+	context.transform(1, 0, 0, 1, page.canvas.width/2, page.canvas.height/2);
+	context.transform(1, 0, 0, -1, 0, 0);
+	var viewportTransform = computeViewportTransform(dt, data);
 	context.transform(
-		currentViewportTransform[0][0],
-		currentViewportTransform[1][0],
-		currentViewportTransform[0][1],
-		currentViewportTransform[1][1],
-		currentViewportTransform[0][2],
-		currentViewportTransform[1][2]
+		viewportTransform[0][0],
+		viewportTransform[1][0],
+		viewportTransform[0][1],
+		viewportTransform[1][1],
+		viewportTransform[0][2],
+		viewportTransform[1][2]
 	);
 
-	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
+	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
+		path.push(data.position.slice(0)); //Store the next point to the list.
+	}
+
 	drawWalls(data.walls);
-	context.transform(1, 0, 0, 1, -lidarForwardDistance, 0);
-	context.transform(Math.cos(-data.angle), Math.sin(-data.angle), -Math.sin(-data.angle), Math.cos(-data.angle), 0, 0);
-	context.transform(1, 0, 0, 1, -data.position[0], -data.position[1]);
 	drawRobotPath();
-	context.transform(1, 0, 0, 1, data.position[0], data.position[1]);
-	context.transform(Math.cos(data.angle), Math.sin(data.angle), -Math.sin(data.angle), Math.cos(data.angle), 0, 0);
 	drawRobotMarker();
-	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
 	drawRobotFrameOfView(data.walls);
 	if(cylonMode) {
 		context.lineWidth *= 2;
@@ -305,6 +300,12 @@ function zoomed(e) {
 	var zoomMultiplier = Math.pow(2, e.wheelDelta/zoomScrollConstant); //Raising 2 to the power of wheelDelta changes it from a positive/negative number to a number that is greater than or less than 1, and so it's fit for a scale factor.
 	zoom *= zoomMultiplier;
 	console.log(Math.log2(zoom));
+	var zoomMatrix = [
+		[zoomMultiplier, 0, 0],
+		[0, zoomMultiplier, 0],
+		[0, 0, 1]
+	];
+	currentUserDisplayTransform = numeric.dot(zoomMatrix, currentUserDisplayTransform);
 }
 function toggleCylonMode() {
 	cylonMode = !cylonMode;
@@ -338,8 +339,8 @@ function computeRotationTransform(dt) {
 		var dT;
 		dT = (dt/1000) * userRotationRadPerSec;
 		dT *= (keys[keycodes.e] ? -1 : 1);
-		var nextTransform = makeRotationMatrix(dT);
-		currentViewp = numeric.dot(nextTransform, currentViewp);
+		var rotMatrix = makeRotationMatrix(dT);
+		currentUserDisplayTransform = numeric.dot(rotMatrix, currentUserDisplayTransform);
 	}
 }
 function makeRotationMatrix(theta) {
@@ -351,7 +352,7 @@ function makeRotationMatrix(theta) {
 		[0, 0, 1]
 	];
 }
-function printMatrix(matrix) { purposes.
+function printMatrix(matrix) {
 	for(var i=0; i<matrix.length; ++i) {
 		var out = "[";
 		for(var j=0; j<matrix[i].length; ++j) {
@@ -372,11 +373,11 @@ function mouseMoved(e) {
 	var delta = numeric.add(mouseCurrentPosition, numeric.dot(-1, mouseLastPosition));
 	if(panning) {
 		var transformMatrix = [
-			[1, 0, delta[1]/zoom],
-			[0, 1, -delta[0]/zoom],
+			[1, 0, delta[1]],
+			[0, 1, -delta[0]],
 			[0, 0, 1]
 		];
-		currentViewportTransform = numeric.dot(transformMatrix, currentViewportTransform);
+		currentUserDisplayTransform = numeric.dot(transformMatrix, currentUserDisplayTransform);
 	}
 }
 function canvasClicked(e) {
@@ -384,8 +385,32 @@ function canvasClicked(e) {
 	panning = true;
 }
 function clickReleased(e) {
+	//
 	panning = false;
 }
+function computeViewportTransform(dt, data) {
+	var m = makeIdentityMatrix();
+	computeRotationTransform(dt);
+	m = numeric.dot(currentUserDisplayTransform, m);
+	var posMatrix = makeTranslationMatrix(data.position[1], -data.position[0]);
+	m = numeric.dot(posMatrix, m);
+	return m;
+}
+function makeTranslationMatrix(dx, dy) {
+	return [
+		[1, 0, dx],
+		[0, 1, dy],
+		[0, 0, 1]
+	];
+}
+function makeIdentityMatrix() {
+	return [
+		[1, 0, 0],
+		[0, 1, 0],
+		[0, 0, 1]
+	];
+}
+
 
 //Executed Code
 setup();
