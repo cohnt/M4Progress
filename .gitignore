@@ -44,3 +44,4 @@ Thumbs.db
 git/
 src/map/Videos/
 src/map/Images/
+.catkin_workspace
