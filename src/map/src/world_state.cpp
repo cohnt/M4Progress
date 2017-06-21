@@ -17,7 +17,7 @@ worldState::worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base) {
 }
 
 void worldState::convertToRobotFrame() {
-	const float lidarForwardDistance = 0.4;
+	const float lidarForwardDistance = 0.23;
 	float t, tMin, tInc;
 	tMin = baseScan.angle_min;
 	tInc = baseScan.angle_increment;

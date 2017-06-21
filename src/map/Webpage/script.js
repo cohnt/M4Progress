@@ -1,8 +1,8 @@
 //Constants
-var robotChassisRadius = 0.3; //The radius of the circle that marks the robot's location, in meters.
+var robotChassisRadius = 0.52/2; //The radius of the circle that marks the robot's location, in meters.
 var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing which direction the robot is pointing. This is the angle between the centerline and one of the sides.
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
-var lidarForwardDistance = 0.2; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
+var lidarForwardDistance = 0.23; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
                                 //Remember to change this value in the C++ code as well!
 var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
