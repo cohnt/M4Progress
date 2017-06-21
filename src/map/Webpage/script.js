@@ -45,6 +45,8 @@ var t0;
 var currentUserTransformationMatrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; //By default, it's the identity matrix.
 var rotating = false;
 var panning = false;
+var mouseCurrentPosition = [0, 0];
+var mouseLastPosition = [0, 0];
 
 //Classes
 function serverMessage(msg) {
@@ -100,8 +102,10 @@ function setup() {
 	page.cylonModeButton.addEventListener("click", toggleCylonMode);
 	document.addEventListener("keydown", function(event) { keydown(event); });
 	document.addEventListener("keyup", function(event) { keyup(event); });
-
-	document.addEventListener("wheel", function(event) { zoomed(event); });
+	page.canvas.addEventListener("wheel", function(event) { zoomed(event); });
+	document.body.addEventListener("mousemove", function(event) { mouseMoved(event); });
+	page.canvas.addEventListener("mousedown", function(event) { canvasClicked(event); });
+	document.body.addEventListener("mouseup", function(event) { clickReleased(event); });
 }
 function mainLoop() {
 	var t = window.performance.now();
@@ -365,6 +369,26 @@ function printMatrix(matrix) {
 		out += "]";
 		console.log(out);
 	}
+}
+function mouseMoved(e) {
+	mouseLastPosition = mouseCurrentPosition.slice(0);
+	mouseCurrentPosition = [e.clientX, window.innerHeight - e.clientY];
+	var delta = numeric.add(mouseCurrentPosition, numeric.dot(-1, mouseLastPosition));
+	if(panning) {
+		var transformMatrix = [
+			[1, 0, delta[1]/zoom],
+			[0, 1, -delta[0]/zoom],
+			[0, 0, 1]
+		];
+		currentUserTransformationMatrix = numeric.dot(transformMatrix, currentUserTransformationMatrix);
+	}
+}
+function canvasClicked(e) {
+	mouseCurrentPosition = [e.clientX, window.innerHeight - e.clientY];
+	panning = true;
+}
+function clickReleased(e) {
+	panning = false;
 }
 
 //Executed Code
