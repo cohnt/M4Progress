@@ -42,7 +42,7 @@ var lastDataMessage;
 var firstTransmission = true;
 var keys = {};
 var t0;
-var currentUserTransformationMatrix = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; //By default, it's the identity matrix.
+var currentViewportTransform = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]; //By default, it's the identity matrix.
 var rotating = false;
 var panning = false;
 var mouseCurrentPosition = [0, 0];
@@ -113,8 +113,8 @@ function mainLoop() {
 	t0 = t;
 	var data = lastDataMessage;
 
-	computeUserTransforms(dt);
-	//printMatrix(currentUserTransformationMatrix);
+	computeRotationTransform(dt);
+	//printMatrix(currentViewportTransform);
 
 	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
 		path.push(data.position.slice(0,2)); //Store the next point to the list.
@@ -129,12 +129,12 @@ function mainLoop() {
 	context.transform(zoom, 0, 0, zoom, 0, 0); //Scale the canvas.
 	context.transform(1, 0, 0, -1, 0, 0); //Flip the canvas so y+ is up.
 	context.transform(
-		currentUserTransformationMatrix[0][0],
-		currentUserTransformationMatrix[1][0],
-		currentUserTransformationMatrix[0][1],
-		currentUserTransformationMatrix[1][1],
-		currentUserTransformationMatrix[0][2],
-		currentUserTransformationMatrix[1][2]
+		currentViewportTransform[0][0],
+		currentViewportTransform[1][0],
+		currentViewportTransform[0][1],
+		currentViewportTransform[1][1],
+		currentViewportTransform[0][2],
+		currentViewportTransform[1][2]
 	);
 
 	context.transform(1, 0, 0, 1, lidarForwardDistance, 0);
@@ -330,7 +330,7 @@ function updateRotation() {
 	var e = keys[keycodes.e];
 	return q ^ e;
 }
-function computeUserTransforms(dt) {
+function computeRotationTransform(dt) {
 	if(rotating) {
 		if(dt > maxUserTransformationTimeElapsed) {
 			return;
@@ -339,10 +339,7 @@ function computeUserTransforms(dt) {
 		dT = (dt/1000) * userRotationRadPerSec;
 		dT *= (keys[keycodes.e] ? -1 : 1);
 		var nextTransform = makeRotationMatrix(dT);
-		currentUserTransformationMatrix = numeric.dot(nextTransform, currentUserTransformationMatrix);
-	}
-	else if(panning) {
-		//
+		currentViewp = numeric.dot(nextTransform, currentViewp);
 	}
 }
 function makeRotationMatrix(theta) {
@@ -354,8 +351,7 @@ function makeRotationMatrix(theta) {
 		[0, 0, 1]
 	];
 }
-function printMatrix(matrix) {
-	//For debugging purposes.
+function printMatrix(matrix) { purposes.
 	for(var i=0; i<matrix.length; ++i) {
 		var out = "[";
 		for(var j=0; j<matrix[i].length; ++j) {
@@ -380,7 +376,7 @@ function mouseMoved(e) {
 			[0, 1, -delta[0]/zoom],
 			[0, 0, 1]
 		];
-		currentUserTransformationMatrix = numeric.dot(transformMatrix, currentUserTransformationMatrix);
+		currentViewportTransform = numeric.dot(transformMatrix, currentViewportTransform);
 	}
 }
 function canvasClicked(e) {
