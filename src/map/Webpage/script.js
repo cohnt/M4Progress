@@ -25,6 +25,7 @@ var keycodes = {
 	e: 69
 }
 var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milliseconds the transformation update will accept for user-inputted rotation transformations.
+var printMatrixMinColWidth = 20;
 
 //Global variables.
 var canvas; //A global variable 
@@ -109,6 +110,7 @@ function mainLoop() {
 	var data = lastDataMessage;
 
 	computeUserTransforms(dt);
+	//printMatrix(currentUserTransformationMatrix);
 
 	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
 		path.push(data.position.slice(0,2)); //Store the next point to the list.
@@ -248,7 +250,7 @@ function drawRobotMarker() {
 	context.stroke();
 }
 function drawRobotFrameOfView(walls) {
-	context.strokeStyle = cylonMode ? styles.cylon : styles.robotFOV;
+	context.strokeStyle = cylonMode ? styles.cylon[0] : styles.robotFOV;
 	context.beginPath();
 	context.moveTo(0, 0);
 	context.lineTo(walls[0][0], walls[0][1]);
@@ -277,6 +279,7 @@ function drawCylonRadar(walls, t) {
 	for(var n=0; n<cylonModeNumLines; ++n) {
 		var k = i + (n*directionModifier);
 		if(k > 0 && k < walls.length) {
+			context.beginPath();
 			context.strokeStyle = styles.cylon[(cylonModeNumLines-n)-1];
 			console.log(cylonModeNumLines-n);
 			context.beginPath();
@@ -348,7 +351,20 @@ function makeRotationMatrix(theta) {
 	];
 }
 function printMatrix(matrix) {
-	//
+	//For debugging purposes.
+	for(var i=0; i<matrix.length; ++i) {
+		var out = "[";
+		for(var j=0; j<matrix[i].length; ++j) {
+			var innerOut = String(matrix[i][j]);
+			while(innerOut.length < printMatrixMinColWidth) {
+				innerOut += " ";
+			}
+			out += innerOut;
+			out += ",";
+		}
+		out += "]";
+		console.log(out);
+	}
 }
 
 //Executed Code
