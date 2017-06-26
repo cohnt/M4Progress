@@ -71,7 +71,7 @@ char* worldState::makeJSONString() {
 	const std::vector<float> position = {odometry.position.x, odometry.position.y, odometry.position.z};
 	const std::vector<float> orientation  = {odometry.orientation.x, odometry.orientation.y, odometry.orientation.z, odometry.orientation.w};
 
-	json message = {
+	json pose = {
 		{"position", position},
 		{"orientation", orientation},
 		{"angleMin", baseScan.angle_min},
@@ -79,14 +79,21 @@ char* worldState::makeJSONString() {
 		{"angleIncrement", baseScan.angle_increment},
 		{"ranges", baseScan.ranges}
 	};
-	message["walls"] = json::array();
+	pose["walls"] = json::array();
 
 	for(int i=0; i<sizeof(walls)/sizeof(walls[0]); ++i) {
 
-		message["walls"][i] = json::array();
-		message["walls"][i][0] = walls[i][0];
-		message["walls"][i][1] = walls[i][1];
+		pose["walls"][i] = json::array();
+		pose["walls"][i][0] = walls[i][0];
+		pose["walls"][i][1] = walls[i][1];
 	}
+
+	std::string poseStr = pose.dump();
+
+	json message = {
+		json::array()
+	};
+	message[0] = json::parse(poseStr);
 
 	std::string msgString = message.dump();
 
