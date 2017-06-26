@@ -5,7 +5,7 @@ var yawIndex = 0; //This is the index in the returned Euler angle array (from qu
 var lidarForwardDistance = 0.23; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
                                 //Remember to change this value in the C++ code as well!
 var minPositionRecordDistance = Math.pow(0.02, 2); //This is how much you have to move before the position is recorded again.
-var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.05, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
+var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.25, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
 var zoomScrollConstant = 120 * 4; //This depends on which mouse you use. For my mouse, one scrolled "tic" has |e.wheelDelta|=120.
@@ -27,6 +27,7 @@ var keycodes = {
 }
 var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milliseconds the transformation update will accept for user-inputted rotation transformations.
 var printMatrixMinColWidth = 20;
+var lidarMinDistanceSquared = 0.5
 
 //Global variables.
 var canvas; //A global variable 
@@ -53,9 +54,11 @@ var panning = false;
 var mouseCurrentPosition = [0, 0];
 var mouseLastPosition = [0, 0];
 var locked = true;
+var badIndeces = [];
 
 //Classes
 function pose(rawPose) {
+	badIndeces = [];
 	this.position = rawPose.position;
 	this.position[2] = 1;
 	this.quaternion = rawPose.orientation
@@ -75,17 +78,20 @@ function pose(rawPose) {
 	this.ranges = rawPose.ranges;
 	for(var i=0; i<this.ranges.length; ++i) {
 		this.ranges[i] = Number(this.ranges[i]);
-		if(isNaN(this.ranges[i])) {
-			this.ranges[i] = Infinity;
+		if(this.ranges[i] == null || this.ranges[i] == 0) {
+			this.ranges[i] = NaN;
+			badIndeces.push(i);
 		}
 	}
 
 	this.walls = rawPose.walls;
 	for(var i=0; i<this.walls.length; ++i) {
 		this.walls[i][0] = Number(this.walls[i][0]); this.walls[i][1] = Number(this.walls[i][1]);
-		var doNotNeed1 = Math.abs(this.walls[i][0]-this.position[0]) < epsilonFloat && Math.abs(this.walls[i][1]-this.position[1]) < epsilonFloat;
+		var lidarForwardPosition = this.position.slice(0); lidarForwardPosition[0] += lidarForwardDistance;
+		var doNotNeed1 = distanceSquared(this.walls[i].slice(0, 2), this.position.slice(0, 2)) < lidarMinDistanceSquared;
 		var doNotNeed2 = isNaN(this.walls[i][0]) || isNaN(this.walls[i][1]);
-		if(doNotNeed1 || doNotNeed2) {
+		var doNotNeed3 = this.walls[i][0] == 0 && this.walls[i][1] == 0;
+		if(doNotNeed1 || doNotNeed2 || doNotNeed3) {
 			this.walls.splice(i, 1);
 			--i;
 		}
@@ -228,7 +234,7 @@ function drawWallsFill(data) {
 	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 
 	for(var i=1; i<data.walls.length; ++i) {
-		if(distanceSquared(data.walls[i], [0, 0, 0]) > wallsFillMinDistanceSquaredFromCenter) {
+		if(distanceSquared(data.walls[i].slice(0, 2), data.position.slice(0, 2)) > wallsFillMinDistanceSquaredFromCenter) {
 			context.lineTo(data.walls[i][0], data.walls[i][1]);
 		}
 	}
@@ -317,7 +323,6 @@ function drawCylonRadar(walls, t) {
 		if(k > 0 && k < walls.length) {
 			context.beginPath();
 			context.strokeStyle = styles.cylon[(cylonModeNumLines-n)-1];
-			console.log(cylonModeNumLines-n);
 			context.beginPath();
 			context.moveTo(0, 0);
 			context.lineTo(walls[k][0], walls[k][1]);
@@ -434,7 +439,6 @@ function computeViewportTransform(dt, data) {
 		var m = makeIdentityMatrix();
 		computeRotationTransform(dt);
 		m = numeric.dot(currentUserDisplayTransform, m);
-		printMatrix(m);
 		return m;
 	}
 	else {
@@ -449,8 +453,6 @@ function computeViewportTransform(dt, data) {
 			[0, 0, 1]
 		];
 		m = numeric.dot(zoomMatrix, m);
-		printMatrix(m);
-		console.log(data.angle);
 		currentUserDisplayTransform = m.slice(0);
 		return m;
 	}
