@@ -18,7 +18,6 @@ var styles = {
 	wallFill: "#ffffff",
 	background: "#eeeeee",
 	robotFOV: "#42f4e2", //A sort of electic blue.
-	cylon: ["#ff5555", "#ff7777", "#ff9999", "#ffaaaa", "#ffcccc", "#ffeeee"]
 };
 var userRotationRadPerSec = Math.PI;
 var keycodes = {
@@ -27,14 +26,14 @@ var keycodes = {
 }
 var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milliseconds the transformation update will accept for user-inputted rotation transformations.
 var printMatrixMinColWidth = 20;
-var lidarMinDistanceSquared = 0.5
+var lidarMinDistanceSquared = 0.1;
+var maxNumSavedPoses = 50;
 
 //Global variables.
 var canvas; //A global variable 
 var context;
 var ws;
 var page = {}; //An object which holds all grabbed html elements from the page in one nice, central location.
-var path = []; //This record the list of 2D point where the robot has been, so the program can draw lines between them.
 var zoom = 128; //As the path and information get bigger, it's useful to zoom out.
                 //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
                 //In other words, the units are pixels per meter.
@@ -55,6 +54,7 @@ var mouseCurrentPosition = [0, 0];
 var mouseLastPosition = [0, 0];
 var locked = true;
 var badIndeces = [];
+var poses = [];
 
 //Classes
 function pose(rawPose) {
@@ -149,19 +149,9 @@ function mainLoop() {
 		viewportTransform[1][2]
 	);
 
-	if(path.length == 0 || distanceSquared(data.position, path[path.length-1]) > minPositionRecordDistance) {
-		path.push(data.position.slice(0)); //Store the next point to the list.
-	}
-
 	drawWalls(data);
-	drawRobotPath(data.position);
 	drawRobotMarker(data);
 	drawRobotFrameOfView(data);
-	if(cylonMode) {
-		context.lineWidth *= 2;
-		drawCylonRadar(data.walls, t);
-		context.lineWidth /= 2;
-	}
 
 	requestAnimationFrame(mainLoop);
 }
@@ -292,43 +282,13 @@ function drawRobotMarker(data) {
 	context.stroke();
 }
 function drawRobotFrameOfView(data) {
-	context.strokeStyle = cylonMode ? styles.cylon[0] : styles.robotFOV;
+	context.strokeStyle = styles.robotFOV;
 	context.beginPath();
 	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 	context.lineTo(data.walls[0][0], data.walls[0][1]);
 	context.moveTo(data.position[0]+(lidarForwardDistance*Math.cos(data.angle)), data.position[1]+(lidarForwardDistance*Math.sin(data.angle)));
 	context.lineTo(data.walls[data.walls.length-1][0], data.walls[data.walls.length-1][1]);
 	context.stroke();
-}
-function drawCylonRadar(walls, t) {
-	var dtCylon = (t - cylonModeStartTime) % cylonModeCycleTime;
-	var i = dtCylon - (cylonModeCycleTime/2);
-	var directionModifier;
-
-	if(i <= 0) {
-		i += (cylonModeCycleTime/2);
-		directionModifier = 1;
-	}
-	else {
-		i = (cylonModeCycleTime/2)-i;
-		directionModifier = -1;
-	}
-
-	i /= (cylonModeCycleTime/2);
-	i *= walls.length;
-	i = Math.floor(i);
-	
-	for(var n=0; n<cylonModeNumLines; ++n) {
-		var k = i + (n*directionModifier);
-		if(k > 0 && k < walls.length) {
-			context.beginPath();
-			context.strokeStyle = styles.cylon[(cylonModeNumLines-n)-1];
-			context.beginPath();
-			context.moveTo(0, 0);
-			context.lineTo(walls[k][0], walls[k][1]);
-			context.stroke();
-		}
-	}
 }
 function distanceSquared(p1, p2) {
 	//Useful for quickly computing distance thresholds.
@@ -348,15 +308,6 @@ function zoomed(e) {
 		[0, 0, 1]
 	];
 	currentUserDisplayTransform = numeric.dot(zoomMatrix, currentUserDisplayTransform);
-}
-function toggleCylonMode() {
-	cylonMode = !cylonMode;
-	if(cylonMode) {
-		cylonModeStartTime = window.performance.now();
-	}
-	else {
-		cylonModeStartTime = NaN;
-	}
 }
 function keydown(e) {
 	var keycode = e.which;
