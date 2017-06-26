@@ -1,7 +1,7 @@
 #ifndef WORLD_STATE
 #define WORLD_STATE
 
-#define BASE_SCAN_MAX_NUM_POINTS 1000
+#define BASE_SCAN_MAX_NUM_POINTS 662
 
 #include "std_msgs/String.h"
 #include "geometry_msgs/Pose.h"
