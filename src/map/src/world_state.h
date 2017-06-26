@@ -9,14 +9,13 @@
 
 class worldState {
 	private:
-
-	public:
 		geometry_msgs::Pose odometry;
 		sensor_msgs::LaserScan baseScan;
 		float walls[BASE_SCAN_MAX_NUM_POINTS][2];
 		void convertToRobotFrame();
 		float convertToWorldFrame();
-		
+
+	public:
 		worldState();
 		worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base);
 

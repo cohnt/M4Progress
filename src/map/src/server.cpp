@@ -11,12 +11,15 @@
 #include <mutex>
 
 #include "world_state.h"
+#include "json.hpp"
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
+
+using json = nlohmann::json;
 
 typedef server::message_ptr message_ptr;
 
