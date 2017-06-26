@@ -55,12 +55,10 @@ var mouseLastPosition = [0, 0];
 var locked = true;
 
 //Classes
-function serverMessage(msg) {
-	var splitMsg = msg.split("|"); //The message is pipe-delimited, as commas are used in the range list.
-
-	this.position = splitMsg.slice(0, 2);
-	this.position.push(1);
-	this.quaternion = splitMsg.slice(3, 7);
+function pose(rawPose) {
+	this.position = rawPose.position;
+	this.position[2] = 1;
+	this.quaternion = rawPose.orientation
 	for(var i=0; i<this.position.length; ++i) {
 		this.position[i] = Number(this.position[i]);
 	}
@@ -70,11 +68,11 @@ function serverMessage(msg) {
 	this.euler = quaternionToEuler(this.quaternion);
 	this.angle = euler[yawIndex];
 
-	this.minAngle = Number(splitMsg[7]);
-	this.maxAngle = Number(splitMsg[8]);
-	this.incrementAngle = Number(splitMsg[9]);
+	this.minAngle = Number(rawPose.angleMin);
+	this.maxAngle = Number(rawPose.angleMax);
+	this.incrementAngle = Number(rawPose.angleIncrement);
 
-	this.ranges = splitMsg[10].split(",");
+	this.ranges = rawPose.ranges;
 	for(var i=0; i<this.ranges.length; ++i) {
 		this.ranges[i] = Number(this.ranges[i]);
 		if(isNaN(this.ranges[i])) {
@@ -82,9 +80,8 @@ function serverMessage(msg) {
 		}
 	}
 
-	this.walls = splitMsg[11].split(";");
+	this.walls = rawPose.walls;
 	for(var i=0; i<this.walls.length; ++i) {
-		this.walls[i] = this.walls[i].slice(1, -1).split(",");
 		this.walls[i][0] = Number(this.walls[i][0]); this.walls[i][1] = Number(this.walls[i][1]);
 		var doNotNeed1 = Math.abs(this.walls[i][0]-this.position[0]) < epsilonFloat && Math.abs(this.walls[i][1]-this.position[1]) < epsilonFloat;
 		var doNotNeed2 = isNaN(this.walls[i][0]) || isNaN(this.walls[i][1]);
@@ -183,14 +180,13 @@ function quaternionToEuler(quat) { //This takes the quaternion array [x, y, z, w
 function startServerConnection() {
 	ws = new WebSocket(document.getElementById("serverAddress").value); //This creates the websocket object.
 	ws.onmessage = function(event) { //When a message is received...
-//		lastDataMessage = new serverMessage(event.data); //Update the last data message.
-//		requestAnimationFrame(sendDataRequest);
-//		if(firstTransmission) {
-//			firstTransmission = false;
-//			t0 = window.performance.now();
-//			requestAnimationFrame(mainLoop);
-//		}
-		console.log(JSON.parse(event.data));
+		lastDataMessage = new pose(JSON.parse(event.data)[0]); //Update the last data message.
+		requestAnimationFrame(sendDataRequest);
+		if(firstTransmission) {
+			firstTransmission = false;
+			t0 = window.performance.now();
+			requestAnimationFrame(mainLoop);
+		}
 	}
 	ws.onopen = function() {
 		console.log("Connection opened.");
