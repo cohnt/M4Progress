@@ -27,16 +27,20 @@ bool needOdom = true; //We want an odometry message first.
 bool serverStarted = false; //Has the server started yet?
 geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
+std::vector<worldState> poses;
 worldState lastWorldState; //The most recent world state.
+
 std::mutex mutex;
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
 		mutex.lock();
-		char *outgoingMessage = lastWorldState.makeJSONString();
-		//std::cout << outgoingMessage << std::endl;
-		s->send(hdl, outgoingMessage, msg->get_opcode());
-		free(outgoingMessage);
+		std::string incomingMsg = msg->get_payload();
+		if(incomingMsg == "ready") {
+			char *outgoingMessage = lastWorldState.makeJSONString();
+			s->send(hdl, outgoingMessage, msg->get_opcode());
+			free(outgoingMessage);
+		}
 		mutex.unlock();
 	}
 	catch (const websocketpp::lib::error_code& e) {
@@ -58,6 +62,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastBaseScan = *msg;
 		std::cout << lastWorldState.newBaseScan(lastBaseScan) << std::endl;
 		lastWorldState.newOdometry(lastOdomPose);
+		poses.push_back(lastWorldState);
 		mutex.unlock();
 	}
 }
