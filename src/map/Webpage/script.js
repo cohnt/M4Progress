@@ -128,7 +128,7 @@ function mainLoop() {
 	var t = window.performance.now();
 	var dt = t - t0; //In milliseconds
 	t0 = t;
-	var data = lastDataMessage;
+	var data = poses.slice(0);
 
 	context.lineWidth = 1/zoom; //Make sure the lines are proper thickness given the zoom factor.
 	context.fillStyle = styles.background; //Fill the screen (by default) with grey.
@@ -139,7 +139,7 @@ function mainLoop() {
 	context.transform(1, 0, 0, 1, page.canvas.width/2, page.canvas.height/2);
 	context.transform(1, 0, 0, -1, 0, 0);
 
-	var viewportTransform = computeViewportTransform(dt, data);
+	var viewportTransform = computeViewportTransform(dt, data[0]);
 	context.transform(
 		viewportTransform[0][0],
 		viewportTransform[1][0],
@@ -149,9 +149,11 @@ function mainLoop() {
 		viewportTransform[1][2]
 	);
 
-	drawWalls(data);
-	drawRobotMarker(data);
-	drawRobotFrameOfView(data);
+	for(var i=data.length-1; i>=0; --i) {
+		drawWalls(data[i]);
+	}
+	drawRobotMarker(data[0]);
+	drawRobotFrameOfView(data[0]);
 
 	requestAnimationFrame(mainLoop);
 }
@@ -176,7 +178,13 @@ function quaternionToEuler(quat) { //This takes the quaternion array [x, y, z, w
 function startServerConnection() {
 	ws = new WebSocket(document.getElementById("serverAddress").value); //This creates the websocket object.
 	ws.onmessage = function(event) { //When a message is received...
-		lastDataMessage = new pose(JSON.parse(event.data)[0]); //Update the last data message.
+		var rawMessage = JSON.parse(event.data); //Update the last data message.
+		for(var i=0; i<rawMessage.length; ++i) {
+			poses.unshift(new pose(rawMessage[i]));
+		}
+		if(poses.length > maxNumSavedPoses) {
+			poses = poses.slice(0, maxNumSavedPoses);
+		}
 		requestAnimationFrame(sendDataRequest);
 		if(firstTransmission) {
 			firstTransmission = false;
