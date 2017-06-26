@@ -25,7 +25,7 @@ class worldState {
 		sensor_msgs::LaserScan getBaseScan();
 		void getWalls(float (&copyIntoThis)[BASE_SCAN_MAX_NUM_POINTS][2]);
 
-		char* stringify();
+		char* makeJSONString();
 };
 
 #endif

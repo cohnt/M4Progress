@@ -33,7 +33,7 @@ std::mutex mutex;
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
 		mutex.lock();
-		char *outgoingMessage = lastWorldState.stringify();
+		char *outgoingMessage = lastWorldState.makeJSONString();
 		//std::cout << outgoingMessage << std::endl;
 		s->send(hdl, outgoingMessage, msg->get_opcode());
 		free(outgoingMessage);

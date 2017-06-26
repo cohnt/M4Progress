@@ -183,13 +183,14 @@ function quaternionToEuler(quat) { //This takes the quaternion array [x, y, z, w
 function startServerConnection() {
 	ws = new WebSocket(document.getElementById("serverAddress").value); //This creates the websocket object.
 	ws.onmessage = function(event) { //When a message is received...
-		lastDataMessage = new serverMessage(event.data); //Update the last data message.
-		requestAnimationFrame(sendDataRequest);
-		if(firstTransmission) {
-			firstTransmission = false;
-			t0 = window.performance.now();
-			requestAnimationFrame(mainLoop);
-		}
+//		lastDataMessage = new serverMessage(event.data); //Update the last data message.
+//		requestAnimationFrame(sendDataRequest);
+//		if(firstTransmission) {
+//			firstTransmission = false;
+//			t0 = window.performance.now();
+//			requestAnimationFrame(mainLoop);
+//		}
+		console.log(JSON.parse(event.data));
 	}
 	ws.onopen = function() {
 		console.log("Connection opened.");

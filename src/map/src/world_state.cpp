@@ -1,6 +1,9 @@
 #include <math.h>
 
 #include "world_state.h"
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 worldState::worldState() {
 	odometry = *(new geometry_msgs::Pose());
@@ -64,44 +67,66 @@ void worldState::getWalls(float (&copyIntoThis)[BASE_SCAN_MAX_NUM_POINTS][2]) {
 		}
 	}
 }
-char* worldState::stringify() {
-	std::string msg;
-	msg += std::to_string(odometry.position.x);
-	msg += "|";
-	msg += std::to_string(odometry.position.y);
-	msg += "|";
-	msg += std::to_string(odometry.position.z);
-	msg += "|";
-	msg += std::to_string(odometry.orientation.x);
-	msg += "|";
-	msg += std::to_string(odometry.orientation.y);
-	msg += "|";
-	msg += std::to_string(odometry.orientation.z);
-	msg += "|";
-	msg += std::to_string(odometry.orientation.w);
-	msg += "|";
-	msg += std::to_string(baseScan.angle_min);
-	msg += "|";
-	msg += std::to_string(baseScan.angle_max);
-	msg += "|";
-	msg += std::to_string(baseScan.angle_increment);
-	msg += "|";
-	msg += std::to_string(baseScan.ranges[0]);
-	for(int i=1; i<baseScan.ranges.size(); ++i) {
-		msg += ",";
-		msg += std::to_string(baseScan.ranges[i]);
+char* worldState::makeJSONString() {
+	const std::vector<float> position = {odometry.position.x, odometry.position.y, odometry.position.z};
+	const std::vector<float> orientation  = {odometry.orientation.x, odometry.orientation.y, odometry.orientation.z, odometry.orientation.w};
+
+	json message = {
+		{"position", position},
+		{"orientation", orientation},
+		{"angleMin", baseScan.angle_min},
+		{"angleMax", baseScan.angle_max},
+		{"angleIncrement", baseScan.angle_increment},
+		{"ranges", baseScan.ranges}
+	};
+	message["walls"] = json::array();
+	for(int i=0; i<sizeof(walls)/sizeof(walls[0]); ++i) {
+		message["walls"][i] = json::array();
+		message["walls"][i][0] = walls[i][0];
+		message["walls"][i][1] = walls[i][1];
 	}
-	msg += "|[";
-	msg += std::to_string(walls[0][0]);
-	msg += ",";
-	msg += std::to_string(walls[0][1]);
-	msg += "]";
-	for(int i=1; i<sizeof(walls)/sizeof(walls[0]); ++i) {
-		msg +=";[";
-		msg += std::to_string(walls[i][0]);
-		msg += ",";
-		msg += std::to_string(walls[i][1]);
-		msg += "]";
-	}
-	return strdup(msg.c_str());
+//
+//	std::string msg;
+//	msg += std::to_string(odometry.position.x);
+//	msg += "|";
+//	msg += std::to_string(odometry.position.y);
+//	msg += "|";
+//	msg += std::to_string(odometry.position.z);
+//	msg += "|";
+//	msg += std::to_string(odometry.orientation.x);
+//	msg += "|";
+//	msg += std::to_string(odometry.orientation.y);
+//	msg += "|";
+//	msg += std::to_string(odometry.orientation.z);
+//	msg += "|";
+//	msg += std::to_string(odometry.orientation.w);
+//	msg += "|";
+//	msg += std::to_string(baseScan.angle_min);
+//	msg += "|";
+//	msg += std::to_string(baseScan.angle_max);
+//	msg += "|";
+//	msg += std::to_string(baseScan.angle_increment);
+//	msg += "|";
+//	msg += std::to_string(baseScan.ranges[0]);
+//	for(int i=1; i<baseScan.ranges.size(); ++i) {
+//		msg += ",";
+//		msg += std::to_string(baseScan.ranges[i]);
+//	}
+//	msg += "|[";
+//	msg += std::to_string(walls[0][0]);
+//	msg += ",";
+//	msg += std::to_string(walls[0][1]);
+//	msg += "]";
+//	for(int i=1; i<sizeof(walls)/sizeof(walls[0]); ++i) {
+//		msg +=";[";
+//		msg += std::to_string(walls[i][0]);
+//		msg += ",";
+//		msg += std::to_string(walls[i][1]);
+//		msg += "]";
+//	}
+	//return strdup(msg.c_str());
+
+	std::string msgString = message.dump();
+
+	return strdup(msgString.c_str());
 }
