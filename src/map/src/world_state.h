@@ -12,6 +12,7 @@ class worldState {
 		geometry_msgs::Pose odometry;
 		sensor_msgs::LaserScan baseScan;
 		float walls[BASE_SCAN_MAX_NUM_POINTS][2];
+		float theta;
 		void convertToRobotFrame();
 		float convertToWorldFrame();
 
@@ -24,6 +25,7 @@ class worldState {
 		geometry_msgs::Pose getOdometry();
 		sensor_msgs::LaserScan getBaseScan();
 		void getWalls(float (&copyIntoThis)[BASE_SCAN_MAX_NUM_POINTS][2]);
+		float getTheta();
 
 		char* makeJSONString();
 };
