@@ -13,7 +13,7 @@ catkin_package()
 
 include_directories(include ${catkin_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src)
 
-add_executable(map_server src/server.cpp include/echo_handler.hpp include/json.hpp src/world_state.h src/world_state.cpp)
+add_executable(map_server src/server.cpp include/echo_handler.hpp include/json.hpp src/world_state.h src/world_state.cpp src/scan_match.h src/scan_match.cpp)
 target_link_libraries(map_server ${catkin_LIBRARIES})
 add_dependencies(map_server beginner_tutorials_generate_messages_cpp)
 

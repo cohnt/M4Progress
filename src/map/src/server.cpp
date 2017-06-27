@@ -11,6 +11,7 @@
 #include <mutex>
 
 #include "world_state.h"
+#include "scan_match.h"
 #include "json.hpp"
 
 typedef websocketpp::server<websocketpp::config::asio> server;
@@ -59,16 +60,31 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
 		mutex.lock();
 		std::string incomingMsg = msg->get_payload();
-		if(incomingMsg == "ready") {
+		std::cout << "\t\t\t\t\t\t\t RECEIVED: " << incomingMsg << std::endl;
+		json message = json::parse(incomingMsg);
+		if(message["type"] == "REQUESTDATA") {
 			if(newDataForClient) {
 				newDataForClient = false;
 				char *outgoingMessage = states[states.size()-1].makeJSONString();
+				std::cout << "\t\t\t\t\t\t\t SENT: " << "(actual data)" << std::endl;
 				s->send(hdl, outgoingMessage, msg->get_opcode());
 				free(outgoingMessage);
 			}
 			else {
-				s->send(hdl, "wait", msg->get_opcode());
+				json outgoingMessage = {
+					{"type", "WAIT"}
+				};
+				std::cout << "\t\t\t\t\t\t\t SENT: " << outgoingMessage.dump() << std::endl;
+				s->send(hdl, outgoingMessage.dump(), msg->get_opcode());
 			}
+		}
+		else if(message["type"] == "CONFIG") {
+			std::cout << "CONFIG" << std::endl;
+			json outgoingMessage = {
+				{"type", "RECEIVEDCONFIG"}
+			};
+			std::cout << "\t\t\t\t\t\t\t SENT: " << outgoingMessage.dump() << std::endl;
+			s->send(hdl, outgoingMessage.dump(), msg->get_opcode());
 		}
 		mutex.unlock();
 	}

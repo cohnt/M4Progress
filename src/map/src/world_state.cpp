@@ -98,9 +98,10 @@ char* worldState::makeJSONString() {
 	std::string poseStr = pose.dump();
 
 	json message = {
-		json::array()
+		{"type", "SENDDATA"},
+		{"data", json::array()}
 	};
-	message[0] = json::parse(poseStr);
+	message["data"][0] = json::parse(poseStr);
 
 	std::string msgString = message.dump();
 

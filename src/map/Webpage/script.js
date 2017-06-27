@@ -158,7 +158,10 @@ function mainLoop() {
 }
 
 function sendDataRequest() {
-	ws.send("ready");
+	var message = {
+		"type": "REQUESTDATA"
+	};
+	ws.send(JSON.stringify(message));
 	//When this message is sent, the server knows that the webpage is ready to process more data.
 	//The server will then proceed to send the most recent data avaiable.
 }
@@ -177,13 +180,10 @@ function quaternionToEuler(quat) { //This takes the quaternion array [x, y, z, w
 function startServerConnection() {
 	ws = new WebSocket(document.getElementById("serverAddress").value); //This creates the websocket object.
 	ws.onmessage = function(event) { //When a message is received...
-		if(event.data == "wait") {
-			sendDataRequest();
-		}
-		else {
-			var rawMessage = JSON.parse(event.data); //Update the last data message.
-			for(var i=0; i<rawMessage.length; ++i) {
-				poses.unshift(new pose(rawMessage[i]));
+		var rawMessage = JSON.parse(event.data); //Update the last data message.
+		if(rawMessage.type == "SENDDATA") {
+			for(var i=0; i<rawMessage.data.length; ++i) {
+				poses.unshift(new pose(rawMessage.data[i]));
 			}
 			if(poses.length > maxNumSavedPoses) {
 				poses = poses.slice(0, maxNumSavedPoses);
@@ -195,10 +195,19 @@ function startServerConnection() {
 				requestAnimationFrame(mainLoop);
 			}
 		}
+		else if(rawMessage.type == "WAIT") {
+			sendDataRequest();
+		}
+		else if(rawMessage.type == "RECEIVEDCONFIG") {
+			sendDataRequest();
+		}
 	}
 	ws.onopen = function() {
 		console.log("Connection opened.");
-		sendDataRequest();
+		var configMessage = {
+			"type": "CONFIG"
+		};
+		ws.send(JSON.stringify(configMessage));
 	}
 }
 function drawWalls(data) {
