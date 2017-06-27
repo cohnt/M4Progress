@@ -29,6 +29,11 @@ var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milli
 var printMatrixMinColWidth = 20;
 var lidarMinDistanceSquared = 0.1;
 var maxNumSavedPoses = 50;
+var minICPComparePoints = 3000; //The minimum number of points ICP must use to compare.
+var maxICPLoopCount = 250; //The maximum number of times ICP can run.
+var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
+var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
+var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
 
 //Global variables.
 var canvas; //A global variable 
@@ -208,12 +213,7 @@ function startServerConnection() {
 	}
 	ws.onopen = function() {
 		console.log("Connection opened.");
-		var configMessage = {
-			"type": "CONFIG",
-			"minPoseTranslationToSave": minPositionRecordChange,
-			"minPoseRotationToSave": minRotationRecordChange,
-			"lidarForwardDistance": lidarForwardDistance
-		};
+		var configMessage = makeConfigMessage();
 		ws.send(JSON.stringify(configMessage));
 	}
 }
@@ -443,6 +443,19 @@ function makeIdentityMatrix() {
 function relock() {
 	currentUserDisplayTransform = [[zoom, 0, 0], [0, zoom, 0], [0, 0, 1]];
 	locked = true;
+}
+function makeConfigMessage() {
+	var msg = {
+		"type": "CONFIG",
+		"minPoseTranslationToSave": minPositionRecordChange,
+		"minPoseRotationToSave": minRotationRecordChange,
+		"lidarForwardDistance": lidarForwardDistance,
+		"minICPComparePoints": minICPComparePoints,
+		"maxICPLoopCount": maxICPLoopCount,
+		"icpAverageDistanceTraveledThresholdSquared": icpAverageDistanceTraveledThresholdSquared,
+		"icpNoMovementCounterThreshold": icpNoMovementCounterThreshold
+	};
+	return msg;
 }
 
 //Executed Code

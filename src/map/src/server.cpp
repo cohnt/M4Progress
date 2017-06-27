@@ -86,6 +86,10 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			minPoseRotationToSave = message["minPoseRotationToSave"];
 			lidarDistance = message["lidarForwardDistance"];
 			lastWorldState.setLidarForwardDistance(lidarDistance);
+			config.minICPComparePoints = message["minICPComparePoints"];
+			config.maxICPLoopCount = message["maxICPLoopCount"];
+			config.icpAverageDistanceTraveledThresholdSquared = message["icpAverageDistanceTraveledThresholdSquared"];
+			config.icpNoMovementCounterThreshold = message["icpNoMovementCounterThreshold"];
 			json outgoingMessage = {
 				{"type", "RECEIVEDCONFIG"}
 			};
