@@ -36,6 +36,7 @@ std::mutex mutex;
 
 float minPoseTranslationToSave = pow(0.02, 2);
 float minPoseRotationToSave = M_PI / 180;
+float lidarDistance = 0.23;
 
 float distanceSquared(std::vector<float> a, std::vector<float> b) {
 	float sum = 0;
@@ -79,7 +80,10 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			}
 		}
 		else if(message["type"] == "CONFIG") {
-			std::cout << "CONFIG" << std::endl;
+			minPoseTranslationToSave = message["minPoseTranslationToSave"];
+			minPoseRotationToSave = message["minPoseRotationToSave"];
+			lidarDistance = message["lidarForwardDistance"];
+			lastWorldState.setLidarForwardDistance(lidarDistance);
 			json outgoingMessage = {
 				{"type", "RECEIVEDCONFIG"}
 			};

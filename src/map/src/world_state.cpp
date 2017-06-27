@@ -9,12 +9,14 @@ worldState::worldState() {
 	odometry = *(new geometry_msgs::Pose());
 	baseScan = *(new sensor_msgs::LaserScan());
 	theta = 0;
+	lidarForwardDistance = 0;
 
 	worldState::convertToRobotFrame();
 }
-worldState::worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base) {
+worldState::worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base, float lidarDistance) {
 	odometry = odom;
 	baseScan = base;
+	lidarForwardDistance = lidarDistance;
 
 	theta = static_cast<float>(atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z)))));
 
@@ -23,7 +25,6 @@ worldState::worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base) {
 }
 
 void worldState::convertToRobotFrame() {
-	const float lidarForwardDistance = 0.23;
 	float t, tMin, tInc;
 	tMin = baseScan.angle_min;
 	tInc = baseScan.angle_increment;
@@ -54,6 +55,10 @@ float worldState::newBaseScan(sensor_msgs::LaserScan base) {
 	worldState::convertToRobotFrame();
 	float a = worldState::convertToWorldFrame();
 	return a;
+}
+void worldState::setLidarForwardDistance(float d) {
+	//
+	lidarForwardDistance = d;
 }
 geometry_msgs::Pose worldState::getOdometry() {
 	//[3]
