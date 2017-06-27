@@ -197,15 +197,6 @@ function startServerConnection() {
 		sendDataRequest();
 	}
 }
-function drawRobotPath(pos) {
-	context.strokeStyle = styles.robotPath
-	context.moveTo(path[0][0], path[0][1]); //Move to the first point in the path.
-	context.beginPath();
-	for(var i=1; i<path.length; ++i) { //This draws lines from point i to point i-1
-		context.lineTo(path[i][0], path[i][1]); //Draw a line to the next point.
-	}
-	context.stroke();
-}
 function drawWalls(data) {
 	context.strokeStyle = styles.wallLines;
 	context.beginPath();
