@@ -115,7 +115,6 @@ function setup() {
 	context.beginPath(); //This starts a path so lines can be drawn.
 
 	page.connectButton.addEventListener("click", startServerConnection);
-	page.cylonModeButton.addEventListener("click", toggleCylonMode);
 	document.addEventListener("keydown", function(event) { keydown(event); });
 	document.addEventListener("keyup", function(event) { keyup(event); });
 	page.canvas.addEventListener("wheel", function(event) { zoomed(event); });
