@@ -38,6 +38,8 @@ float minPoseTranslationToSave = pow(0.02, 2);
 float minPoseRotationToSave = M_PI / 180;
 float lidarDistance = 0.23;
 
+icpConfig config;
+
 float distanceSquared(std::vector<float> a, std::vector<float> b) {
 	float sum = 0;
 	for(int i=0; i<a.size(); ++i) {
@@ -113,6 +115,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
+			optimizeScan(lastWorldState, states);
 			states.push_back(lastWorldState);
 			newDataForClient = true;
 		}

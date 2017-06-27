@@ -150,6 +150,9 @@ function mainLoop() {
 	);
 
 	for(var i=data.length-1; i>=0; --i) {
+		drawWallsFill(data[i]);
+	}
+	for(var i=data.length-1; i>=0; --i) {
 		drawWalls(data[i]);
 	}
 	drawRobotMarker(data[0]);
@@ -229,7 +232,6 @@ function drawWalls(data) {
 		}
 	}
 	context.stroke();
-	drawWallsFill(data);
 }
 function addRangeLineSegment(p0, p1) {
 	context.moveTo(p0[0], p0[1]);
