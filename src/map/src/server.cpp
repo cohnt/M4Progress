@@ -29,6 +29,7 @@ geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
 std::vector<worldState> states;
 worldState lastWorldState; //The most recent world state.
+bool newDataForClient;
 
 std::mutex mutex;
 
@@ -59,9 +60,15 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 		mutex.lock();
 		std::string incomingMsg = msg->get_payload();
 		if(incomingMsg == "ready") {
-			char *outgoingMessage = lastWorldState.makeJSONString();
-			s->send(hdl, outgoingMessage, msg->get_opcode());
-			free(outgoingMessage);
+			if(newDataForClient) {
+				newDataForClient = false;
+				char *outgoingMessage = states[states.size()-1].makeJSONString();
+				s->send(hdl, outgoingMessage, msg->get_opcode());
+				free(outgoingMessage);
+			}
+			else {
+				s->send(hdl, "wait", msg->get_opcode());
+			}
 		}
 		mutex.unlock();
 	}
@@ -87,6 +94,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
 			states.push_back(lastWorldState);
+			newDataForClient = true;
 		}
 		mutex.unlock();
 	}
