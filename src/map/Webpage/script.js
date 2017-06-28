@@ -34,6 +34,7 @@ var maxICPLoopCount = 250; //The maximum number of times ICP can run.
 var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
 var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
+var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
 
 //Global variables.
 var canvas; //A global variable 
@@ -61,6 +62,7 @@ var mouseLastPosition = [0, 0];
 var locked = true;
 var badIndeces = [];
 var poses = [];
+var frameTimes = [];
 
 //Classes
 function pose(rawPose) {
@@ -154,14 +156,27 @@ function mainLoop() {
 		viewportTransform[1][2]
 	);
 
-	for(var i=data.length-1; i>=0; --i) {
-		drawWallsFill(data[i]);
+	if(doIDrawWallsFill) {
+		for(var i=data.length-1; i>=0; --i) {
+			drawWallsFill(data[i]);
+		}
 	}
 	for(var i=data.length-1; i>=0; --i) {
 		drawWalls(data[i]);
 	}
 	drawRobotMarker(data[0]);
 	drawRobotFrameOfView(data[0]);
+
+	frameTimes.push(window.performance.now() - t);
+	var s = 0;
+	for(var i=frameTimes.length-20; i<frameTimes.length; ++i) {
+		if(i < 0) {
+			continue;
+		}
+		s += frameTimes[i];
+	}
+	console.log("Frame time: " + String(frameTimes[frameTimes.length-1]) + " ms");
+	console.log("Average frame time (last 20): " + String(s/20) + "ms");
 
 	requestAnimationFrame(mainLoop);
 }
