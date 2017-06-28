@@ -13,6 +13,6 @@ struct icpConfig {
 	int icpNoMovementCounterThreshold;
 };
 
-void optimizeScan(worldState &newScan, std::vector<worldState> map);
+void optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
 
 #endif

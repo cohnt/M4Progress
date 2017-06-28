@@ -119,7 +119,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
-			optimizeScan(lastWorldState, states);
+			optimizeScan(lastWorldState, states, config);
 			states.push_back(lastWorldState);
 			newDataForClient = true;
 		}
