@@ -117,6 +117,8 @@ function setup() {
 	page.connectButton = document.getElementById("connect");
 	page.cylonModeButton = document.getElementById("cylon");
 	page.relockButton = document.getElementById("relock");
+	page.frameTime = document.getElementById("frameTime");
+	page.avgFrameTime = document.getElementById("avgFrameTime");
 
 	page.canvas.style.transform = "matrix(0, -1, 1, 0, 0, 0)"; //Rotate the canvas so up is forward, like in a map.
 	context = page.canvas.getContext("2d"); //All canvas drawings are done through a context.
@@ -167,16 +169,7 @@ function mainLoop() {
 	drawRobotMarker(data[0]);
 	drawRobotFrameOfView(data[0]);
 
-	frameTimes.push(window.performance.now() - t);
-	var s = 0;
-	for(var i=frameTimes.length-20; i<frameTimes.length; ++i) {
-		if(i < 0) {
-			continue;
-		}
-		s += frameTimes[i];
-	}
-	console.log("Frame time: " + String(frameTimes[frameTimes.length-1]) + " ms");
-	console.log("Average frame time (last 20): " + String(s/20) + "ms");
+	updateDebug(t);
 
 	requestAnimationFrame(mainLoop);
 }
@@ -471,6 +464,25 @@ function makeConfigMessage() {
 		"icpNoMovementCounterThreshold": icpNoMovementCounterThreshold
 	};
 	return msg;
+}
+function updateDebug(frameStartTime) {
+	frameTimes.unshift(window.performance.now() - frameStartTime);
+
+	var s = 0;
+	for(var i=0; i<20; ++i) {
+		if(i >= frameTimes.length) {
+			break;
+		}
+		s += frameTimes[i];
+	}
+
+	frameTimes = frameTimes.slice(0, 20);
+
+	console.log("Frame time: " + String(frameTimes[0]) + " ms");
+	page.frameTime.innerHTML = String(frameTimes[0]).slice(0, 8);
+
+	console.log("Average frame time (last 20): " + String(s/20) + "ms");
+	page.avgFrameTime.innerHTML = String(s/20).slice(0, 8);
 }
 
 //Executed Code
