@@ -58,6 +58,18 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			std::vector<std::vector<float>> oldPoints;
 			std::vector<std::vector<float>> newPoints;
 			std::vector<std::vector<int>> pointPairsIndexes;
+			float newWalls[BASE_SCAN_MAX_NUM_POINTS][2];
+			newScan.getWalls(newWalls);
+			std::vector<std::vector<float>> newWallsVector;
+			for(int i=0; i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
+				newWallsVector.push_back(std::vector<float>(newWalls[i][0], newWalls[i][1]));
+			}
+			pointPairsIndexes = matchPoints(knownPoints, newWallsVector, cfg);
+			for(int i=0; i<pointPairsIndexes.size(); ++i) {
+				oldPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
+				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
+			}
+			//
 		}
 	}
 
