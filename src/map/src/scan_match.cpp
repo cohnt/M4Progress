@@ -28,6 +28,54 @@ std::vector<std::vector<int>> matchPoints(std::vector<std::vector<float>> pc1, s
 		}
 	}
 }
+svdOutput SVD(std::vector<std::vector<float>> A) {
+	//???
+}
+icpOutput runICP(std::vector<std::vector<float>> set1, std::vector<std::vector<float>> set2) {
+	std::vector<std::vector<float>> pi;
+	std::vector<std::vector<float>> pi1;
+
+	for(int i=0; i<set2.size(); ++i) {
+		pi.push_back(set1[i]);
+		pi1.push_back(set2[i]);
+	}
+
+	std::vector<float> p = {0, 0};
+	std::vector<float> p1 = {0, 0};
+
+	for(int i=0; i<pi.size(); ++i) {
+		p[0] += pi[i][0];
+		p[1] += pi[i][1];
+		p1[0] += pi1[i][0];
+		p1[1] += pi1[i][1];
+	}
+	p[0] = p[0]/pi.size();
+	p[1] = p[1]/pi.size();
+	p1[0] = p1[0]/pi1.size();
+	p1[1] = p1[1]/pi1.size();
+
+	std::vector<std::vector<float>> qi;
+	std::vector<std::vector<float>> qi1;
+
+	for(int i=0; i<pi.size(); ++i) {
+		qi.push_back(std::vector<float>(pi[i][0]-p[0], pi[i][1]-p[1]));
+		qi1.push_back(std::vector<float>(pi1[i][0]-p1[0], pi1[i][1]-p1[1]));
+	}
+
+	std::vector<std::vector<float>> H = {std::vector<float>(0, 0), std::vector<float>(0, 0)};
+	for(int i=0; i<qi.size(); ++i){
+		H[0][0] += qi1[i][0]*qi[i][0];
+		H[0][1] += qi1[i][1]*qi[i][0];
+		H[1][0] += qi1[i][0]*qi[i][1];
+		H[1][1] += qi1[i][1]*qi[i][1];
+	}
+
+	std::vector<std::vector<float>> U;
+	std::vector<std::vector<float>> S;
+	std::vector<std::vector<float>> V;
+	std::vector<std::vector<float>> UT;
+	std::vector<std::vector<float>> VT;
+}
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::vector<float>> knownPoints;
 	bool finished = false;
@@ -69,7 +117,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 				oldPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
 				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
 			}
-			//
+			icpOutput results = runICP(oldPoints, newPoints);
 		}
 	}
 
