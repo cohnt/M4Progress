@@ -90,6 +90,8 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			config.maxICPLoopCount = message["maxICPLoopCount"];
 			config.icpAverageDistanceTraveledThresholdSquared = message["icpAverageDistanceTraveledThresholdSquared"];
 			config.icpNoMovementCounterThreshold = message["icpNoMovementCounterThreshold"];
+			config.goodCorrespondenceThresholdSquared = message["goodCorrespondenceThresholdSquared"];
+			config.maximumPointMatchDistance = message["maximumPointMatchDistance"];
 			json outgoingMessage = {
 				{"type", "RECEIVEDCONFIG"}
 			};
@@ -119,7 +121,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
-			optimizeScan(lastWorldState, states, config);
+			std::cout << "KNOWNPOINTS SIZE: " << optimizeScan(lastWorldState, states, config) << std::endl;
 			states.push_back(lastWorldState);
 			newDataForClient = true;
 		}

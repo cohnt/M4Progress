@@ -35,6 +35,8 @@ var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled 
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
 var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
 var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
+var goodCorrespondenceThresholdSquared = Math.pow(0, 2);
+var maximumPointMatchDistance = 2;
 
 //Global variables.
 var canvas; //A global variable 
@@ -461,7 +463,9 @@ function makeConfigMessage() {
 		"minICPComparePoints": minICPComparePoints,
 		"maxICPLoopCount": maxICPLoopCount,
 		"icpAverageDistanceTraveledThresholdSquared": icpAverageDistanceTraveledThresholdSquared,
-		"icpNoMovementCounterThreshold": icpNoMovementCounterThreshold
+		"icpNoMovementCounterThreshold": icpNoMovementCounterThreshold,
+		"goodCorrespondenceThresholdSquared": goodCorrespondenceThresholdSquared,
+		"maximumPointMatchDistance": maximumPointMatchDistance
 	};
 	return msg;
 }
