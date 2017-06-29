@@ -27,6 +27,7 @@ struct svdOutput {
 
 std::vector<std::vector<int>> matchPoints(std::vector<std::vector<float>> pc1, std::vector<std::vector<float>> pc2);
 svdOutput SVD(std::vector<std::vector<float>> A);
+void transpose(std::vector<std::vector<float>> &m);
 icpOutput runICP(std::vector<std::vector<float>> set1, std::vector<std::vector<float>> set2);
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
 

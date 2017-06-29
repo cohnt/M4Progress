@@ -8,10 +8,17 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
 )
+find_package(Eigen3)
 
-catkin_package()
+catkin_package(
+  INCLUDE_DIRS
+  LIBRARIES
+  CATKIN_DEPENDS
+  DEPENDS Eigen
+)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src)
+include_directories(include ${catkin_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/src ${Eigen_INCLUDE_DIRS})
+
 
 add_executable(map_server src/server.cpp include/echo_handler.hpp include/json.hpp src/world_state.h src/world_state.cpp src/scan_match.h src/scan_match.cpp)
 target_link_libraries(map_server ${catkin_LIBRARIES})

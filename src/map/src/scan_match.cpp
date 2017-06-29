@@ -1,10 +1,11 @@
 #include "scan_match.h"
 #include <math.h>
 #include <limits>
+#include <eigen3/Eigen/Dense>
 
 float distanceSquared(std::vector<float> a, std::vector<float> b);
 
-std::vector<std::vector<int>> matchPoints(std::vector<std::vector<float>> pc1, std::vector<std::vector<float>> pc2, icpConfig cfg) {
+std::vector<std::vector<int>> matchPoints(std::vector<std::vector<float>> &pc1, std::vector<std::vector<float>> &pc2, icpConfig cfg) {
 	std::vector<std::vector<int>> pairIndexes;
 
 	for(int i=0; i<pc2.size(); ++i) {
@@ -27,9 +28,53 @@ std::vector<std::vector<int>> matchPoints(std::vector<std::vector<float>> pc1, s
 			}
 		}
 	}
+
+	return pairIndexes;
 }
 svdOutput SVD(std::vector<std::vector<float>> A) {
-	//???
+	using namespace Eigen;
+
+	MatrixXf m(2, 2);
+	m(0, 0) = A[0][0];
+	m(1, 0) = A[1][0];
+	m(0, 1) = A[0][1];
+	m(1, 1) = A[1][1];
+
+	JacobiSVD<MatrixXf> svd(m, ComputeThinU | ComputeThinV);
+
+	MatrixXf Um = svd.matrixU();
+	MatrixXf Vm = svd.matrixV();
+	MatrixXf Id(2, 2);
+	Id(0, 0) = 1; Id(0, 1) = 0; Id(1, 0) = 0; Id(1, 1) = 1;
+	VectorXf Sv = svd.singularValues();
+	MatrixXf Sm = Id*Sv;
+
+	std::vector<std::vector<float>> U;
+	U.push_back(std::vector<float>(Um(0, 0), Um(0, 1)));
+	U.push_back(std::vector<float>(Um(1, 0), Um(1, 1)));
+	std::vector<std::vector<float>> V;
+	V.push_back(std::vector<float>(Vm(0, 0), Vm(0, 1)));
+	V.push_back(std::vector<float>(Vm(1, 0), Vm(1, 1)));
+	std::vector<std::vector<float>> S;
+	S.push_back(std::vector<float>(Sm(0, 0), Sm(0, 1)));
+	S.push_back(std::vector<float>(Sm(1, 0), Sm(1, 1)));
+
+	svdOutput output;
+	output.U = U;
+	output.V = V;
+	output.S = S;
+	return output;
+}
+void transpose(std::vector<std::vector<float>> &m) {
+	for(int i=0; i<m.size(); ++i) {
+		for(int j=i; j<m[i].size(); ++j) {
+			if(m[i][j] != m[j][i]) {
+				m[i][j] = m[i][j] + m[j][i];
+				m[j][i] = m[i][j] - m[j][i];
+				m[i][j] = m[i][j] - m[j][i];
+			}
+		}
+	}
 }
 icpOutput runICP(std::vector<std::vector<float>> set1, std::vector<std::vector<float>> set2) {
 	std::vector<std::vector<float>> pi;
@@ -70,26 +115,45 @@ icpOutput runICP(std::vector<std::vector<float>> set1, std::vector<std::vector<f
 		H[1][1] += qi1[i][1]*qi[i][1];
 	}
 
-	std::vector<std::vector<float>> U;
-	std::vector<std::vector<float>> S;
-	std::vector<std::vector<float>> V;
-	std::vector<std::vector<float>> UT; //Transpose U
-	std::vector<std::vector<float>> VT; //Transpose V
+	svdOutput out = SVD(H);
 
-	std::vector<std::vector<float>> rotationMatrix;
-	std::vector<float> translationVector;
+	std::vector<std::vector<float>> U = out.U;
+	std::vector<std::vector<float>> S = out.S;
+	std::vector<std::vector<float>> V = out.V;
+	std::vector<std::vector<float>> UT = U; transpose(UT);
+	std::vector<std::vector<float>> VT = U; transpose(VT);
+
+	std::vector<std::vector<float>> rotationMatrix; //V*UT
+	rotationMatrix.push_back(std::vector<float>((V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1])));
+	rotationMatrix.push_back(std::vector<float>((V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1])));
+	std::vector<float> translationVector; //p1-(rotationMatrix*p)
+	translationVector.push_back(p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])));
+	translationVector.push_back(p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1])));
 
 	for(int i=0; i<2; ++i) {
 		for(int j=0; j<2; ++j) {
-			//
+			if(rotationMatrix[i][j] > 1) {
+				rotationMatrix[i][j] = 1;
+			}
+			else if(rotationMatrix[i][j] < -1) {
+				rotationMatrix[i][j] = -1;
+			}
 		}
 	}
+
+	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0])};
 }
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::vector<float>> knownPoints;
 	bool finished = false;
 	int totalLoopCount;
 	float iterationTotalSquaredDistance;
+	float iterationAverageSquaredDistance;
+	std::vector<std::vector<float>> oldScanPoints;
+	int icpLoopCounter = 0;
+	float scanAngleError = 0;
+	std::vector<float> scanPositionError = {0, 0};
+	std::vector<std::vector<float>> scanTransformError = {std::vector<float>(1, 0), std::vector<float>(0, 1)};
 
 	int i=map.size()-1;
 	while(i >= 0 && knownPoints.size() <= cfg.minICPComparePoints) {
@@ -121,12 +185,47 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			for(int i=0; i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
 				newWallsVector.push_back(std::vector<float>(newWalls[i][0], newWalls[i][1]));
 			}
+			//
+			// THE ERROR OCCURS WHEN YOU CALL matchPoints()!!!!!
+			//
 			pointPairsIndexes = matchPoints(knownPoints, newWallsVector, cfg);
 			for(int i=0; i<pointPairsIndexes.size(); ++i) {
 				oldPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
 				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
 			}
 			icpOutput results = runICP(oldPoints, newPoints);
+			std::vector<std::vector<float>> rotationMatrix = results.rotationMatrix;
+			std::vector<float> translationVector = results.translation;
+			float angle = results.theta;
+
+			for(int i=0; i<newWallsVector.size(); ++i) {
+				if(oldScanPoints.size() >= i) {
+					oldScanPoints.push_back(newWallsVector[i]);
+				}
+				else {
+					oldScanPoints[i] = newWallsVector[i];
+				}
+				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
+				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
+				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
+			}
+			iterationAverageSquaredDistance = iterationTotalSquaredDistance / newWallsVector.size();
+
+			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
+				++icpLoopCounter;
+				if(icpLoopCounter >= cfg.icpNoMovementCounterThreshold) {
+					finished = true;
+				}
+			}
+			else {
+				icpLoopCounter = 0;
+			}
+
+			scanAngleError += angle;
+			scanPositionError[0] += translationVector[0];
+			scanPositionError[1] += translationVector[1];
+			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
+			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);
 		}
 	}
 
