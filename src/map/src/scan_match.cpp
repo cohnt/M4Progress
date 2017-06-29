@@ -73,8 +73,17 @@ icpOutput runICP(std::vector<std::vector<float>> set1, std::vector<std::vector<f
 	std::vector<std::vector<float>> U;
 	std::vector<std::vector<float>> S;
 	std::vector<std::vector<float>> V;
-	std::vector<std::vector<float>> UT;
-	std::vector<std::vector<float>> VT;
+	std::vector<std::vector<float>> UT; //Transpose U
+	std::vector<std::vector<float>> VT; //Transpose V
+
+	std::vector<std::vector<float>> rotationMatrix;
+	std::vector<float> translationVector;
+
+	for(int i=0; i<2; ++i) {
+		for(int j=0; j<2; ++j) {
+			//
+		}
+	}
 }
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::vector<float>> knownPoints;
