@@ -14,6 +14,10 @@
 #include "scan_match.h"
 #include "json.hpp"
 
+#ifndef BASE_SCAN_MAX_NUM_POINTS
+#define BASE_SCAN_MAX_NUM_POINTS 662
+#endif
+
 typedef websocketpp::server<websocketpp::config::asio> server;
 
 using websocketpp::lib::placeholders::_1;
@@ -34,14 +38,14 @@ bool newDataForClient;
 
 std::mutex mutex;
 
-float minPoseTranslationToSave = pow(0.02, 2);
-float minPoseRotationToSave = M_PI / 180;
-float lidarDistance = 0.23;
+double minPoseTranslationToSave = pow(0.02, 2);
+double minPoseRotationToSave = M_PI / 180;
+double lidarDistance = 0.23;
 
 icpConfig config;
 
-float distanceSquared(std::vector<float> a, std::vector<float> b) {
-	float sum = 0;
+double distanceSquared(std::vector<double> a, std::vector<double> b) {
+	double sum = 0;
 	for(int i=0; i<a.size(); ++i) {
 		sum += pow(a[i]-b[i], 2);
 	}
@@ -53,8 +57,8 @@ bool doSave(worldState state) {
 	}
 	geometry_msgs::Pose currentPose = state.getOdometry();
 	geometry_msgs::Pose oldPose = states[states.size()-1].getOdometry();
-	std::vector<float> currentPoseVector = {currentPose.position.x, currentPose.position.y, currentPose.position.z};
-	std::vector<float> oldPoseVector = {oldPose.position.x, oldPose.position.y, oldPose.position.z};
+	std::vector<double> currentPoseVector = {currentPose.position.x, currentPose.position.y, currentPose.position.z};
+	std::vector<double> oldPoseVector = {oldPose.position.x, oldPose.position.y, oldPose.position.z};
 	std::cout << "d^2: " << distanceSquared(currentPoseVector, oldPoseVector) << ", min: " << minPoseTranslationToSave << std::endl;
 	std::cout << "dTheta: " << abs(state.getTheta()-states[states.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
 	return distanceSquared(currentPoseVector, oldPoseVector) || (abs(state.getTheta()-states[states.size()-1].getTheta()) > minPoseRotationToSave);

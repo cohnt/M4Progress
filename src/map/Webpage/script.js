@@ -482,10 +482,10 @@ function updateDebug(frameStartTime) {
 
 	frameTimes = frameTimes.slice(0, 20);
 
-	console.log("Frame time: " + String(frameTimes[0]) + " ms");
+	//console.log("Frame time: " + String(frameTimes[0]) + " ms");
 	page.frameTime.innerHTML = String(frameTimes[0]).slice(0, 8);
 
-	console.log("Average frame time (last 20): " + String(s/20) + "ms");
+	//console.log("Average frame time (last 20): " + String(s/20) + "ms");
 	page.avgFrameTime.innerHTML = String(s/20).slice(0, 8);
 }
 

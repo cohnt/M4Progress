@@ -9,10 +9,10 @@
 struct icpConfig {
 	int minICPComparePoints;
 	int maxICPLoopCount;
-	float icpAverageDistanceTraveledThresholdSquared;
+	double icpAverageDistanceTraveledThresholdSquared;
 	int icpNoMovementCounterThreshold;
-	float goodCorrespondenceThresholdSquared;
-	float maximumPointMatchDistance;
+	double goodCorrespondenceThresholdSquared;
+	double maximumPointMatchDistance;
 };
 
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
