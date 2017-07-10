@@ -31,6 +31,7 @@ sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
 std::vector<worldState> states;
 worldState lastWorldState; //The most recent world state.
 bool newDataForClient;
+bool justGotConfig = false;
 
 std::mutex mutex;
 
@@ -49,6 +50,10 @@ float distanceSquared(std::vector<float> a, std::vector<float> b) {
 }
 bool doSave(worldState state) {
 	if(states.size() == 0) {
+		return true;
+	}
+	else if(justGotConfig) {
+		justGotConfig = false;
 		return true;
 	}
 	geometry_msgs::Pose currentPose = state.getOdometry();
@@ -97,6 +102,8 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			};
 			std::cout << "\t\t\t\t\t\t\t SENT: " << outgoingMessage.dump() << std::endl;
 			s->send(hdl, outgoingMessage.dump(), msg->get_opcode());
+			newDataForClient = false;
+			justGotConfig = true;
 		}
 		mutex.unlock();
 	}

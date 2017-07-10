@@ -30,12 +30,12 @@ void worldState::convertToRobotFrame() {
 	tInc = baseScan.angle_increment;
 	t = tMin;
 	for(int i=0; i<baseScan.ranges.size(); ++i) {
-		t += tInc;
 		walls[i][0] = baseScan.ranges[i]*cos(t)+lidarForwardDistance; walls[i][1] = -1*baseScan.ranges[i]*sin(t);
+		t += tInc;
 	}
 	for(int i=baseScan.ranges.size(); i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
-		walls[i][0] = odometry.position.x;
-		walls[i][1] = odometry.position.y;
+		walls[i][0] = 0;
+		walls[i][1] = 0;
 	}
 }
 float worldState::convertToWorldFrame() {

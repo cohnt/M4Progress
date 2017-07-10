@@ -144,7 +144,7 @@ icpOutput runICP(std::vector<std::vector<float>> set1, std::vector<std::vector<f
 	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0])};
 }
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
-	std::vector<std::vector<float>> knownPoints;
+	/*std::vector<std::vector<float>> knownPoints;
 	bool finished = false;
 	int totalLoopCount;
 	float iterationTotalSquaredDistance;
@@ -229,5 +229,6 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 		}
 	}
 
-	return knownPoints.size();
+	return knownPoints.size();*/
+	return 0;
 }
