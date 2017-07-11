@@ -26,7 +26,7 @@ class worldState {
 		void setLidarForwardDistance(double d);
 		geometry_msgs::Pose getOdometry();
 		sensor_msgs::LaserScan getBaseScan();
-		void getWalls(double (&copyIntoThis)[BASE_SCAN_MAX_NUM_POINTS][2]);
+		std::vector<std::array<double, 3>> getWalls();
 		double getTheta();
 
 		char* makeJSONString();

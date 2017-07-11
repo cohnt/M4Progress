@@ -74,7 +74,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			if(newDataForClient) {
 				newDataForClient = false;
 				char *outgoingMessage = states[states.size()-1].makeJSONString();
-				std::cout << "\t\t\t\t\t\t\t SENT: " << outgoingMessage << std::endl;
+				std::cout << "\t\t\t\t\t\t\t SENT: " << "(data message)" << std::endl;
 				s->send(hdl, outgoingMessage, msg->get_opcode());
 				free(outgoingMessage);
 			}

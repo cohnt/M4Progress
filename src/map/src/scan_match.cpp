@@ -144,30 +144,31 @@ icpOutput runICP(std::vector<std::vector<double>> set1, std::vector<std::vector<
 	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0])};
 }
 int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
-	/*std::vector<std::vector<double>> knownPoints;
+	std::vector<std::array<double, 3>> knownPoints;
 	bool finished = false;
 	int totalLoopCount;
 	double iterationTotalSquaredDistance;
 	double iterationAverageSquaredDistance;
-	std::vector<std::vector<double>> oldScanPoints;
+	std::vector<std::array<double, 3>> oldScanPoints;
 	int icpLoopCounter = 0;
 	double scanAngleError = 0;
-	std::vector<double> scanPositionError = {0, 0};
-	std::vector<std::vector<double>> scanTransformError = {std::vector<double>(1, 0), std::vector<double>(0, 1)};
+	std::array<double, 2> scanPositionError = {0, 0};
+	std::array<std::array<double, 3>, 3> scanTransformError = {
+		std::array<double, 3>{1, 0, 0},
+		std::array<double, 3>{0, 1, 0},
+		std::array<double, 3>{0, 0, 1}
+	};
 
 	int i=map.size()-1;
+	knownPoints.reserve(cfg.minICPComparePoints + BASE_SCAN_MAX_NUM_POINTS);
 	while(i >= 0 && knownPoints.size() <= cfg.minICPComparePoints) {
-		double walls[BASE_SCAN_MAX_NUM_POINTS][2];
-		map[i].getWalls(walls);
+		std::vector<std::array<double, 3>> walls = map[i].getWalls();
 		for(int j=0; j<BASE_SCAN_MAX_NUM_POINTS; ++j) {
-			std::vector<double> wall = {walls[j][0], walls[j][1]};
-			if(wall[0] != map[i].getOdometry().position.x || wall[1] != map[i].getOdometry().position.y) {
-				knownPoints.push_back(wall);
-			}
+			knownPoints.push_back(walls[j]);
 		}
 	}
 
-	while(!finished) {
+	/*while(!finished) {
 		++totalLoopCount;
 		if(totalLoopCount >= cfg.maxICPLoopCount) {
 			//Failed scan
@@ -180,7 +181,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			std::vector<std::vector<double>> newPoints;
 			std::vector<std::vector<int>> pointPairsIndexes;
 			double newWalls[BASE_SCAN_MAX_NUM_POINTS][2];
-			newScan.getWalls(newWalls);
+			newScan.getWalls(newWalls); //UPDATE THIS TO WORK AGAIN
 			std::vector<std::vector<double>> newWallsVector;
 			for(int i=0; i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
 				newWallsVector.push_back(std::vector<double>(newWalls[i][0], newWalls[i][1]));
@@ -227,8 +228,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
 			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);
 		}
-	}
+	}*/
 
-	return knownPoints.size();*/
-	return 0;
+	return knownPoints.size();
 }

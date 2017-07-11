@@ -224,6 +224,7 @@ function startServerConnection() {
 	ws.onopen = function() {
 		console.log("Connection opened.");
 		var configMessage = makeConfigMessage();
+		console.log(configMessage);
 		ws.send(JSON.stringify(configMessage));
 	}
 }

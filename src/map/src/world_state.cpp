@@ -75,12 +75,13 @@ sensor_msgs::LaserScan worldState::getBaseScan() {
 	//
 	return baseScan;
 }
-void worldState::getWalls(double (&copyIntoThis)[BASE_SCAN_MAX_NUM_POINTS][2]) {
+std::vector<std::array<double, 3>> worldState::getWalls() {
+	std::vector<std::array<double, 3>> toReturn;
+	toReturn.reserve(BASE_SCAN_MAX_NUM_POINTS);
 	for(int i=0; i<walls.size(); ++i) {
-		for(int j=0; j<walls[i].size(); ++j) {
-			copyIntoThis[i][j] = walls[i][j];
-		}
+		toReturn.push_back(walls[i]);
 	}
+	return toReturn;
 }
 double worldState::getTheta() {
 	//
