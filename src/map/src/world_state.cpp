@@ -11,14 +11,17 @@ worldState::worldState() {
 	theta = 0;
 	lidarForwardDistance = 0;
 
+	walls.reserve(BASE_SCAN_MAX_NUM_POINTS);
+
 	worldState::convertToRobotFrame();
 }
 worldState::worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base, double lidarDistance) {
 	odometry = odom;
 	baseScan = base;
+	theta = atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z))));
 	lidarForwardDistance = lidarDistance;
 
-	theta = static_cast<double>(atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z)))));
+	walls.reserve(BASE_SCAN_MAX_NUM_POINTS);
 
 	worldState::convertToRobotFrame();
 	worldState::convertToWorldFrame();
@@ -30,16 +33,18 @@ void worldState::convertToRobotFrame() {
 	tInc = baseScan.angle_increment;
 	t = tMin;
 	for(int i=0; i<baseScan.ranges.size(); ++i) {
-		walls[i][0] = baseScan.ranges[i]*cos(t)+lidarForwardDistance; walls[i][1] = -1*baseScan.ranges[i]*sin(t);
+		walls.push_back(
+			std::array<double, 3>{
+				baseScan.ranges[i]*cos(t)+lidarForwardDistance,
+				-1*baseScan.ranges[i]*sin(t),
+				1
+			}
+		);
 		t += tInc;
-	}
-	for(int i=baseScan.ranges.size(); i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
-		walls[i][0] = 0;
-		walls[i][1] = 0;
 	}
 }
 double worldState::convertToWorldFrame() {
-	for(int i=0; i<sizeof(walls)/sizeof(walls[0]); ++i) {
+	for(int i=0; i<walls.size(); ++i) {
 		walls[i][0] = (walls[i][0] * cos(theta)) - (walls[i][1] * sin(theta)) + odometry.position.x;
 		walls[i][1] = (walls[i][0] * sin(theta)) + (walls[i][1] * cos(theta)) + odometry.position.y;
 	}
@@ -48,10 +53,12 @@ double worldState::convertToWorldFrame() {
 void worldState::newOdometry(geometry_msgs::Pose odom) {
 	odometry = odom;
 	theta = static_cast<double>(atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z)))));
+	walls.resize(0);
 	worldState::convertToRobotFrame();
 }
 double worldState::newBaseScan(sensor_msgs::LaserScan base) {
 	baseScan = base;
+	walls.resize(0);
 	worldState::convertToRobotFrame();
 	double a = worldState::convertToWorldFrame();
 	return a;
@@ -69,8 +76,8 @@ sensor_msgs::LaserScan worldState::getBaseScan() {
 	return baseScan;
 }
 void worldState::getWalls(double (&copyIntoThis)[BASE_SCAN_MAX_NUM_POINTS][2]) {
-	for(int i=0; i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
-		for(int j=0; j<2; ++j) {
+	for(int i=0; i<walls.size(); ++i) {
+		for(int j=0; j<walls[i].size(); ++j) {
 			copyIntoThis[i][j] = walls[i][j];
 		}
 	}
@@ -93,11 +100,11 @@ char* worldState::makeJSONString() {
 	};
 	pose["walls"] = json::array();
 
-	for(int i=0; i<sizeof(walls)/sizeof(walls[0]); ++i) {
-
+	for(int i=0; i<walls.size(); ++i) {
 		pose["walls"][i] = json::array();
 		pose["walls"][i][0] = walls[i][0];
 		pose["walls"][i][1] = walls[i][1];
+		pose["walls"][i][2] = walls[i][2];
 	}
 
 	std::string poseStr = pose.dump();

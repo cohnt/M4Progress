@@ -11,7 +11,7 @@ class worldState {
 	private:
 		geometry_msgs::Pose odometry;
 		sensor_msgs::LaserScan baseScan;
-		double walls[BASE_SCAN_MAX_NUM_POINTS][2];
+		std::vector<std::array<double, 3>> walls;
 		double theta;
 		double lidarForwardDistance;
 		void convertToRobotFrame();
