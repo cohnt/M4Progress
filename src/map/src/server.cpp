@@ -14,6 +14,8 @@
 #include "scan_match.h"
 #include "json.hpp"
 
+#define NUM_STATES_TO_RESERVE 4096
+
 typedef websocketpp::server<websocketpp::config::asio> server;
 
 using websocketpp::lib::placeholders::_1;
@@ -97,6 +99,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			config.icpNoMovementCounterThreshold = message["icpNoMovementCounterThreshold"];
 			config.goodCorrespondenceThresholdSquared = message["goodCorrespondenceThresholdSquared"];
 			config.maximumPointMatchDistance = message["maximumPointMatchDistance"];
+			config.percentChanceToMatchPoints = message["percentChanceToMatchPoints"];
 			json outgoingMessage = {
 				{"type", "RECEIVEDCONFIG"}
 			};
@@ -128,7 +131,9 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
-			std::cout << "KNOWNPOINTS SIZE: " << optimizeScan(lastWorldState, states, config) << std::endl;
+			if(states.size() != 0) {
+				std::cout << "KNOWNPOINTS SIZE: " << optimizeScan(lastWorldState, states, config) << std::endl;
+			}
 			states.push_back(lastWorldState);
 			newDataForClient = true;
 		}
@@ -137,6 +142,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 }
 
 int main(int argc, char **argv) {
+	states.reserve(NUM_STATES_TO_RESERVE);
+
 	server echoServer;
 	echoServer.set_access_channels(websocketpp::log::alevel::all);
 	echoServer.clear_access_channels(websocketpp::log::alevel::frame_payload);
