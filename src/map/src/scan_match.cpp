@@ -123,12 +123,12 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 		std::array<double, 2>{0, 0},
 		std::array<double, 2>{0, 0}
 	};
-//	for(int i=0; i<qi.size(); ++i){
-//		H[0][0] += qi1[i][0]*qi[i][0];
-//		H[0][1] += qi1[i][1]*qi[i][0];
-//		H[1][0] += qi1[i][0]*qi[i][1];
-//		H[1][1] += qi1[i][1]*qi[i][1];
-//	}
+	for(int i=0; i<qi.size(); ++i){
+		H[0][0] += qi1[i][0]*qi[i][0];
+		H[0][1] += qi1[i][1]*qi[i][0];
+		H[1][0] += qi1[i][0]*qi[i][1];
+		H[1][1] += qi1[i][1]*qi[i][1];
+	}
 //
 //	svdOutput out = SVD(H);
 //
