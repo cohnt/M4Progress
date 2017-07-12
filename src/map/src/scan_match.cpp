@@ -91,15 +91,15 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 		pi1.push_back(std::array<double, 2>{set2[i][0], set2[i][1]});
 	}
 
-//	std::array<double, 2> p = {0, 0};
-//	std::array<double, 2> p1 = {0, 0};
-//
-//	for(int i=0; i<pi.size(); ++i) {
-//		p[0] += pi[i][0];
-//		p[1] += pi[i][1];
-//		p1[0] += pi1[i][0];
-//		p1[1] += pi1[i][1];
-//	}
+	std::array<double, 2> p = {0, 0};
+	std::array<double, 2> p1 = {0, 0};
+
+	for(int i=0; i<pi.size(); ++i) {
+		p[0] += pi[i][0];
+		p[1] += pi[i][1];
+		p1[0] += pi1[i][0];
+		p1[1] += pi1[i][1];
+	}
 //	p[0] = p[0]/pi.size();
 //	p[1] = p[1]/pi.size();
 //	p1[0] = p1[0]/pi1.size();
@@ -109,8 +109,8 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 //	std::vector<std::array<double, 2>> qi1;
 //
 //	for(int i=0; i<pi.size(); ++i) {
-//		qi.push_back(std::array<double, 2>(pi[i][0]-p[0], pi[i][1]-p[1]));
-//		qi1.push_back(std::array<double, 2>(pi1[i][0]-p1[0], pi1[i][1]-p1[1]));
+//		qi.push_back(std::array<double, 2>{pi[i][0]-p[0], pi[i][1]-p[1]});
+//		qi1.push_back(std::array<double, 2>{pi1[i][0]-p1[0], pi1[i][1]-p1[1]});
 //	}
 //
 //	std::vector<std::vector<double>> H = {std::vector<double>(0, 0), std::vector<double>(0, 0)};
