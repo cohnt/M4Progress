@@ -37,7 +37,7 @@ std::vector<std::array<int, 2>> matchPoints(std::vector<std::array<double, 3>> &
 
 	return pairIndexes;
 }
-svdOutput SVD(std::vector<std::vector<double>> A) {
+svdOutput SVD(std::array<std::array<double, 2>, 2> A) {
 	using namespace Eigen;
 
 	MatrixXf m(2, 2);
@@ -55,20 +55,20 @@ svdOutput SVD(std::vector<std::vector<double>> A) {
 	VectorXf Sv = svd.singularValues();
 	MatrixXf Sm = Id*Sv;
 
-	std::vector<std::vector<double>> U;
-	U.push_back(std::vector<double>(Um(0, 0), Um(0, 1)));
-	U.push_back(std::vector<double>(Um(1, 0), Um(1, 1)));
-	std::vector<std::vector<double>> V;
-	V.push_back(std::vector<double>(Vm(0, 0), Vm(0, 1)));
-	V.push_back(std::vector<double>(Vm(1, 0), Vm(1, 1)));
-	std::vector<std::vector<double>> S;
-	S.push_back(std::vector<double>(Sm(0, 0), Sm(0, 1)));
-	S.push_back(std::vector<double>(Sm(1, 0), Sm(1, 1)));
-
+//	std::vector<std::vector<double>> U;
+//	U.push_back(std::vector<double>(Um(0, 0), Um(0, 1)));
+//	U.push_back(std::vector<double>(Um(1, 0), Um(1, 1)));
+//	std::vector<std::vector<double>> V;
+//	V.push_back(std::vector<double>(Vm(0, 0), Vm(0, 1)));
+//	V.push_back(std::vector<double>(Vm(1, 0), Vm(1, 1)));
+//	std::vector<std::vector<double>> S;
+//	S.push_back(std::vector<double>(Sm(0, 0), Sm(0, 1)));
+//	S.push_back(std::vector<double>(Sm(1, 0), Sm(1, 1)));
+//
 	svdOutput output;
-	output.U = U;
-	output.V = V;
-	output.S = S;
+//	output.U = U;
+//	output.V = V;
+//	output.S = S;
 	return output;
 }
 void transpose(std::vector<std::vector<double>> &m) {
@@ -129,8 +129,8 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 		H[1][0] += qi1[i][0]*qi[i][1];
 		H[1][1] += qi1[i][1]*qi[i][1];
 	}
-//
-//	svdOutput out = SVD(H);
+
+	svdOutput out = SVD(H);
 //
 //	std::vector<std::vector<double>> U = out.U;
 //	std::vector<std::vector<double>> S = out.S;
