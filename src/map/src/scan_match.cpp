@@ -104,10 +104,10 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 	p[1] = p[1]/pi.size();
 	p1[0] = p1[0]/pi1.size();
 	p1[1] = p1[1]/pi1.size();
-//
-//	std::vector<std::array<double, 2>> qi;
-//	std::vector<std::array<double, 2>> qi1;
-//
+
+	std::vector<std::array<double, 2>> qi;
+	std::vector<std::array<double, 2>> qi1;
+
 //	for(int i=0; i<pi.size(); ++i) {
 //		qi.push_back(std::array<double, 2>{pi[i][0]-p[0], pi[i][1]-p[1]});
 //		qi1.push_back(std::array<double, 2>{pi1[i][0]-p1[0], pi1[i][1]-p1[1]});
