@@ -69,9 +69,9 @@ svdOutput SVD(std::array<std::array<double, 2>, 2> A) {
 	};
 
 	svdOutput output;
-//	output.U = U;
-//	output.V = V;
-//	output.S = S;
+	output.U = U;
+	output.V = V;
+	output.S = S;
 	return output;
 }
 void transpose(std::vector<std::vector<double>> &m) {

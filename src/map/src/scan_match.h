@@ -21,9 +21,9 @@ struct icpOutput {
 	double theta;
 };
 struct svdOutput {
-	std::vector<std::vector<double>> U;
-	std::vector<std::vector<double>> S;
-	std::vector<std::vector<double>> V;
+	std::array<std::array<double, 2>, 2> U;
+	std::array<std::array<double, 2>, 2> S;
+	std::array<std::array<double, 2>, 2> V;
 };
 
 std::vector<std::vector<int>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);
