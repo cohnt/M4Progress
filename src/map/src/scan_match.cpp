@@ -74,7 +74,7 @@ svdOutput SVD(std::array<std::array<double, 2>, 2> A) {
 	output.S = S;
 	return output;
 }
-void transpose(std::vector<std::vector<double>> &m) {
+void transpose(std::array<std::array<double, 2>, 2> &m) {
 	for(int i=0; i<m.size(); ++i) {
 		for(int j=i; j<m[i].size(); ++j) {
 			if(m[i][j] != m[j][i]) {
@@ -138,9 +138,9 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 	std::array<std::array<double, 2>, 2> U = out.U;
 	std::array<std::array<double, 2>, 2> S = out.S;
 	std::array<std::array<double, 2>, 2> V = out.V;
-//	std::vector<std::vector<double>> UT = U; transpose(UT);
-//	std::vector<std::vector<double>> VT = U; transpose(VT);
-//
+	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
+	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
+
 //	std::vector<std::vector<double>> rotationMatrix; //V*UT
 //	rotationMatrix.push_back(std::vector<double>((V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1])));
 //	rotationMatrix.push_back(std::vector<double>((V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1])));
