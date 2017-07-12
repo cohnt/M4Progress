@@ -108,10 +108,16 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 	std::vector<std::array<double, 2>> qi;
 	std::vector<std::array<double, 2>> qi1;
 
-//	for(int i=0; i<pi.size(); ++i) {
-//		qi.push_back(std::array<double, 2>{pi[i][0]-p[0], pi[i][1]-p[1]});
-//		qi1.push_back(std::array<double, 2>{pi1[i][0]-p1[0], pi1[i][1]-p1[1]});
-//	}
+	for(int i=0; i<pi.size(); ++i) {
+		qi.push_back(std::array<double, 2>{
+			pi[i][0]-p[0],
+			pi[i][1]-p[1]
+		});
+		qi1.push_back(std::array<double, 2>{
+			pi1[i][0]-p1[0],
+			pi1[i][1]-p1[1]
+		});
+	}
 //
 //	std::vector<std::vector<double>> H = {std::vector<double>(0, 0), std::vector<double>(0, 0)};
 //	for(int i=0; i<qi.size(); ++i){
