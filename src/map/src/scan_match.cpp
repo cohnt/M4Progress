@@ -203,8 +203,8 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
 			}
 			icpOutput results = runICP(oldPoints, newPoints);
-			/*std::vector<std::vector<double>> rotationMatrix = results.rotationMatrix;
-			std::vector<double> translationVector = results.translation;
+			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
+			std::array<double, 2> translationVector = results.translation;
 			double angle = results.theta;
 
 			for(int i=0; i<newWallsVector.size(); ++i) {
@@ -218,7 +218,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
 				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
 			}
-			iterationAverageSquaredDistance = iterationTotalSquaredDistance / newWallsVector.size();
+			/*iterationAverageSquaredDistance = iterationTotalSquaredDistance / newWallsVector.size();
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
