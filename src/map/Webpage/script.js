@@ -37,6 +37,7 @@ var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least t
 var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
 var goodCorrespondenceThresholdSquared = Math.pow(0, 2);
 var maximumPointMatchDistance = 2;
+var percentChanceToMatchPoints = 10;
 
 //Global variables.
 var canvas; //A global variable 
@@ -466,7 +467,8 @@ function makeConfigMessage() {
 		"icpAverageDistanceTraveledThresholdSquared": icpAverageDistanceTraveledThresholdSquared,
 		"icpNoMovementCounterThreshold": icpNoMovementCounterThreshold,
 		"goodCorrespondenceThresholdSquared": goodCorrespondenceThresholdSquared,
-		"maximumPointMatchDistance": maximumPointMatchDistance
+		"maximumPointMatchDistance": maximumPointMatchDistance,
+		"percentChanceToMatchPoints": percentChanceToMatchPoints
 	};
 	return msg;
 }
