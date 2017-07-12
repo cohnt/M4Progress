@@ -216,9 +216,12 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 				}
 				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
 				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
-				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
+				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
+				if(x == x) {
+					iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
+				}
 			}
-			iterationAverageSquaredDistance = iterationTotalSquaredDistance / newWallsVector.size();
+			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
@@ -238,5 +241,5 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 		}
 	}
 
-	return knownPoints.size();
+	return totalLoopCount;
 }

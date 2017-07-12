@@ -133,7 +133,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
 			if(states.size() != 0) {
-				std::cout << "KNOWNPOINTS SIZE: " << optimizeScan(lastWorldState, states, config) << std::endl;
+				int loopCount = optimizeScan(lastWorldState, states, config);
+				std::cout << "ICP Total Loop Count: " << loopCount << std::endl;
 			}
 			states.push_back(lastWorldState);
 			newDataForClient = true;
