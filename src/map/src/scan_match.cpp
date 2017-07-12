@@ -218,7 +218,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
 				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
 			}
-			/*iterationAverageSquaredDistance = iterationTotalSquaredDistance / newWallsVector.size();
+			iterationAverageSquaredDistance = iterationTotalSquaredDistance / newWallsVector.size();
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
@@ -230,7 +230,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 				icpLoopCounter = 0;
 			}
 
-			scanAngleError += angle;
+			/*scanAngleError += angle;
 			scanPositionError[0] += translationVector[0];
 			scanPositionError[1] += translationVector[1];
 			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
