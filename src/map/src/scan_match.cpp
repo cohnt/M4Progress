@@ -189,11 +189,13 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			std::vector<std::array<int, 2>> pointPairsIndexes;
 			std::vector<std::array<double, 3>> newWallsVector = newScan.getWalls();
 			pointPairsIndexes = matchPoints(knownPoints, newWallsVector, cfg);
-			/*for(int i=0; i<pointPairsIndexes.size(); ++i) {
+			oldPoints.reserve(newWallsVector.size());
+			newPoints.reserve(newWallsVector.size());
+			for(int i=0; i<pointPairsIndexes.size(); ++i) {
 				oldPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
 				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
 			}
-			icpOutput results = runICP(oldPoints, newPoints);
+			/*icpOutput results = runICP(oldPoints, newPoints);
 			std::vector<std::vector<double>> rotationMatrix = results.rotationMatrix;
 			std::vector<double> translationVector = results.translation;
 			double angle = results.theta;
