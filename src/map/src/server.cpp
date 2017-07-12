@@ -70,12 +70,12 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
 		mutex.lock();
 		std::string incomingMsg = msg->get_payload();
-		std::cout << "\t\t\t\t\t\t\t RECEIVED: " << incomingMsg << std::endl;
 		json message = json::parse(incomingMsg);
 		if(message["type"] == "REQUESTDATA") {
 			if(newDataForClient) {
 				newDataForClient = false;
 				char *outgoingMessage = states[states.size()-1].makeJSONString();
+				std::cout << "\t\t\t\t\t\t\t RECEIVED: " << incomingMsg << std::endl;
 				std::cout << "\t\t\t\t\t\t\t SENT: " << "(data message)" << std::endl;
 				s->send(hdl, outgoingMessage, msg->get_opcode());
 				free(outgoingMessage);
@@ -84,11 +84,12 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 				json outgoingMessage = {
 					{"type", "WAIT"}
 				};
-				std::cout << "\t\t\t\t\t\t\t SENT: " << outgoingMessage.dump() << std::endl;
+				//std::cout << "\t\t\t\t\t\t\t SENT: " << outgoingMessage.dump() << std::endl;
 				s->send(hdl, outgoingMessage.dump(), msg->get_opcode());
 			}
 		}
 		else if(message["type"] == "CONFIG") {
+			std::cout << "\t\t\t\t\t\t\t RECEIVED: " << incomingMsg << std::endl;
 			minPoseTranslationToSave = message["minPoseTranslationToSave"];
 			minPoseRotationToSave = message["minPoseRotationToSave"];
 			lidarDistance = message["lidarForwardDistance"];
