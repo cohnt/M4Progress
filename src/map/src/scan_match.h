@@ -16,8 +16,8 @@ struct icpConfig {
 	double percentChanceToMatchPoints;
 };
 struct icpOutput {
-	std::vector<std::vector<double>> rotationMatrix;
-	std::vector<double> translation;
+	std::array<std::array<double, 3>, 3> rotationMatrix;
+	std::array<double, 2> translation;
 	double theta;
 };
 struct svdOutput {
