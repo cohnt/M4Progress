@@ -134,10 +134,10 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 	}
 
 	svdOutput out = SVD(H);
-//
-//	std::vector<std::vector<double>> U = out.U;
-//	std::vector<std::vector<double>> S = out.S;
-//	std::vector<std::vector<double>> V = out.V;
+
+	std::array<std::array<double, 2>, 2> U = out.U;
+	std::array<std::array<double, 2>, 2> S = out.S;
+	std::array<std::array<double, 2>, 2> V = out.V;
 //	std::vector<std::vector<double>> UT = U; transpose(UT);
 //	std::vector<std::vector<double>> VT = U; transpose(VT);
 //
