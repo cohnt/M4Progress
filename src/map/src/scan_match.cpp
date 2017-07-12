@@ -176,21 +176,13 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			//TODO
 			break;
 		}
-	/*	else {
+		else {
 			iterationTotalSquaredDistance = 0;
-			std::vector<std::vector<double>> oldPoints;
-			std::vector<std::vector<double>> newPoints;
-			std::vector<std::vector<int>> pointPairsIndexes;
-			double newWalls[BASE_SCAN_MAX_NUM_POINTS][2];
-			newScan.getWalls(newWalls); //UPDATE THIS TO WORK AGAIN
-			std::vector<std::vector<double>> newWallsVector;
-			for(int i=0; i<BASE_SCAN_MAX_NUM_POINTS; ++i) {
-				newWallsVector.push_back(std::vector<double>(newWalls[i][0], newWalls[i][1]));
-			}
-			//
-			// THE ERROR OCCURS WHEN YOU CALL matchPoints()!!!!!
-			//
-			pointPairsIndexes = matchPoints(knownPoints, newWallsVector, cfg);
+			std::vector<std::array<double, 3>> oldPoints;
+			std::vector<std::array<double, 3>> newPoints;
+			std::vector<std::array<int, 2>> pointPairsIndexes;
+			std::vector<std::array<double, 3>> newWallsVector = newScan.getWalls();
+			/*pointPairsIndexes = matchPoints(knownPoints, newWallsVector, cfg);
 			for(int i=0; i<pointPairsIndexes.size(); ++i) {
 				oldPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
 				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
@@ -227,8 +219,8 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			scanPositionError[0] += translationVector[0];
 			scanPositionError[1] += translationVector[1];
 			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
-			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);
-		}*/
+			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);*/
+		}
 	}
 
 	return knownPoints.size();
