@@ -168,14 +168,15 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 		}
 	}
 
-	/*while(!finished) {
+	totalLoopCount = 0;
+	while(!finished) {
 		++totalLoopCount;
 		if(totalLoopCount >= cfg.maxICPLoopCount) {
 			//Failed scan
 			//TODO
 			break;
 		}
-		else {
+	/*	else {
 			iterationTotalSquaredDistance = 0;
 			std::vector<std::vector<double>> oldPoints;
 			std::vector<std::vector<double>> newPoints;
@@ -227,8 +228,8 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			scanPositionError[1] += translationVector[1];
 			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
 			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);
-		}
-	}*/
+		}*/
+	}
 
 	return knownPoints.size();
 }
