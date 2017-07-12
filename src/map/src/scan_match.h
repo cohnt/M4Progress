@@ -13,6 +13,7 @@ struct icpConfig {
 	int icpNoMovementCounterThreshold;
 	double goodCorrespondenceThresholdSquared;
 	double maximumPointMatchDistance;
+	double percentChanceToMatchPoints;
 };
 struct icpOutput {
 	std::vector<std::vector<double>> rotationMatrix;
