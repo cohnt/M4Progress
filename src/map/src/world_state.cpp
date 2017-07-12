@@ -48,6 +48,11 @@ double worldState::convertToWorldFrame() {
 		walls[i][0] = (walls[i][0] * cos(theta)) - (walls[i][1] * sin(theta)) + odometry.position.x;
 		walls[i][1] = (walls[i][0] * sin(theta)) + (walls[i][1] * cos(theta)) + odometry.position.y;
 	}
+	for(int i=0; i<walls.size(); ++i) {
+		if(walls[i][0] != walls[i][0] || walls[i][1] != walls[i][1] || walls[i][2] != walls[i][2]) {
+			walls.erase(walls.begin() + i);
+		}
+	}
 	return theta;
 }
 void worldState::newOdometry(geometry_msgs::Pose odom) {

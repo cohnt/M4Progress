@@ -15,22 +15,26 @@ std::vector<std::array<int, 2>> matchPoints(std::vector<std::array<double, 3>> &
 	std::vector<std::array<int, 2>> pairIndexes;
 
 	for(int i=0; i<pc2.size(); ++i) {
-		if(rand() % 100 < 10) {
-			double smallestSquaredDistance = FLT_MAX;
-			int smallestSquaredDistanceIndex;
-			for(int j=pc1.size()-1; j>=0; --j) {
-				double d = distanceSquared(pc2[i], pc1[j]);
-				if(d < smallestSquaredDistance) {
-					smallestSquaredDistance = d;
-					smallestSquaredDistanceIndex = j;
+		if(pc2[i][0] == pc2[i][0] && pc2[i][1] == pc2[i][1] && pc2[i][2] == pc2[i][2]) {
+			if(rand() % 100 < 10) {
+				double smallestSquaredDistance = FLT_MAX;
+				int smallestSquaredDistanceIndex;
+				for(int j=pc1.size()-1; j>=0; --j) {
+					if(pc1[i][0] == pc1[i][0] && pc1[i][1] == pc1[i][1] && pc1[i][2] == pc1[i][2]) {
+						double d = distanceSquared(pc2[i], pc1[j]);
+						if(d < smallestSquaredDistance) {
+							smallestSquaredDistance = d;
+							smallestSquaredDistanceIndex = j;
+						}
+						if(d < cfg.goodCorrespondenceThresholdSquared) {
+							break;
+						}
+					}
 				}
-				if(d < cfg.goodCorrespondenceThresholdSquared) {
-					break;
+				if(smallestSquaredDistance < cfg.maximumPointMatchDistance) {
+					std::array<int, 2> pair = {i, smallestSquaredDistanceIndex};
+					pairIndexes.push_back(pair);
 				}
-			}
-			if(smallestSquaredDistance < cfg.maximumPointMatchDistance) {
-				std::array<int, 2> pair = {i, smallestSquaredDistanceIndex};
-				pairIndexes.push_back(pair);
 			}
 		}
 	}
@@ -141,30 +145,26 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
 	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
 
-//	std::vector<std::vector<double>> rotationMatrix; //V*UT
-//	rotationMatrix.push_back(std::vector<double>((V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1])));
-//	rotationMatrix.push_back(std::vector<double>((V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1])));
-//	std::vector<double> translationVector; //p1-(rotationMatrix*p)
-//	translationVector.push_back(p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])));
-//	translationVector.push_back(p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1])));
-//
-//	for(int i=0; i<2; ++i) {
-//		for(int j=0; j<2; ++j) {
-//			if(rotationMatrix[i][j] > 1) {
-//				rotationMatrix[i][j] = 1;
-//			}
-//			else if(rotationMatrix[i][j] < -1) {
-//				rotationMatrix[i][j] = -1;
-//			}
-//		}
-//	}
-
-	std::array<std::array<double, 3>, 3> rotationMatrix = {
-		std::array<double, 3>{1, 0, 0},
-		std::array<double, 3>{0, 1, 0},
+	std::array<std::array<double, 3>, 3> rotationMatrix = { //V*UT
+		std::array<double, 3>{(V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1]), 0},
+		std::array<double, 3>{(V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1]), 0},
 		std::array<double, 3>{0, 0, 1}
 	};
-	std::array<double, 2> translationVector = {0, 0};
+	std::array<double, 2> translationVector = {
+		p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])),
+		p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1]))
+	};
+
+	for(int i=0; i<2; ++i) {
+		for(int j=0; j<2; ++j) {
+			if(rotationMatrix[i][j] > 1) {
+				rotationMatrix[i][j] = 1;
+			}
+			else if(rotationMatrix[i][j] < -1) {
+				rotationMatrix[i][j] = -1;
+			}
+		}
+	}
 
 	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0])};
 }
@@ -211,7 +211,7 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			oldPoints.reserve(newWallsVector.size());
 			newPoints.reserve(newWallsVector.size());
 			for(int i=0; i<pointPairsIndexes.size(); ++i) {
-				oldPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
+				oldPoints.push_back(knownPoints[pointPairsIndexes[i][0]]);
 				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
 			}
 			icpOutput results = runICP(oldPoints, newPoints);
@@ -219,13 +219,9 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 			std::array<double, 2> translationVector = results.translation;
 			double angle = results.theta;
 
+			oldScanPoints.clear();
 			for(int i=0; i<newWallsVector.size(); ++i) {
-				if(oldScanPoints.size() >= i) {
-					oldScanPoints.push_back(newWallsVector[i]);
-				}
-				else {
-					oldScanPoints[i] = newWallsVector[i];
-				}
+				oldScanPoints.push_back(newWallsVector[i]);
 				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
 				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
 				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
@@ -253,5 +249,5 @@ int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg
 		}
 	}
 
-	return totalLoopCount;
+	return icpLoopCounter;
 }
