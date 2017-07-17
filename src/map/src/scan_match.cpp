@@ -273,7 +273,7 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
 
 			if(iterationAverageSquaredDistance == 0) {
-				break;
+				return returnData;
 			}
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {

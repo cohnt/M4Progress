@@ -45,8 +45,10 @@ void worldState::convertToRobotFrame() {
 }
 double worldState::convertToWorldFrame() {
 	for(int i=0; i<walls.size(); ++i) {
-		walls[i][0] = (walls[i][0] * cos(theta)) - (walls[i][1] * sin(theta)) + odometry.position.x;
-		walls[i][1] = (walls[i][0] * sin(theta)) + (walls[i][1] * cos(theta)) + odometry.position.y;
+		double x = walls[i][0];
+		double y = walls[i][1];
+		walls[i][0] = ((x * cos(theta)) + (y * sin(-theta))) + odometry.position.x;
+		walls[i][1] = ((x * sin(theta)) + (y * cos(theta))) + odometry.position.y;
 	}
 	for(int i=0; i<walls.size(); ++i) {
 		if(walls[i][0] != walls[i][0] || walls[i][1] != walls[i][1] || walls[i][2] != walls[i][2]) {
@@ -58,9 +60,7 @@ double worldState::convertToWorldFrame() {
 }
 void worldState::newOdometry(geometry_msgs::Pose odom) {
 	odometry = odom;
-	theta = static_cast<double>(atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z)))));
-	//walls.resize(0);
-	//worldState::convertToRobotFrame();
+	theta = atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z))));
 }
 double worldState::newBaseScan(sensor_msgs::LaserScan base) {
 	baseScan = base;
@@ -74,7 +74,7 @@ void worldState::setLidarForwardDistance(double d) {
 	lidarForwardDistance = d;
 }
 geometry_msgs::Pose worldState::getOdometry() {
-	//[3]
+	//
 	return odometry;
 }
 sensor_msgs::LaserScan worldState::getBaseScan() {
@@ -100,6 +100,7 @@ char* worldState::makeJSONString() {
 	json pose = {
 		{"position", position},
 		{"orientation", orientation},
+		{"theta", theta},
 		{"angleMin", baseScan.angle_min},
 		{"angleMax", baseScan.angle_max},
 		{"angleIncrement", baseScan.angle_increment},

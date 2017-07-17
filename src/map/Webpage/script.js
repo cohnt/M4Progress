@@ -63,13 +63,11 @@ var panning = false;
 var mouseCurrentPosition = [0, 0];
 var mouseLastPosition = [0, 0];
 var locked = true;
-var badIndeces = [];
 var poses = [];
 var frameTimes = [];
 
 //Classes
 function pose(rawPose) {
-	badIndeces = [];
 	this.position = rawPose.position;
 	this.position[2] = 1;
 	this.quaternion = rawPose.orientation
@@ -81,6 +79,7 @@ function pose(rawPose) {
 	}
 	this.euler = quaternionToEuler(this.quaternion);
 	this.angle = euler[yawIndex];
+	//this.angle = rawPose.theta;
 
 	this.minAngle = Number(rawPose.angleMin);
 	this.maxAngle = Number(rawPose.angleMax);
@@ -91,25 +90,26 @@ function pose(rawPose) {
 		this.ranges[i] = Number(this.ranges[i]);
 		if(this.ranges[i] == null || this.ranges[i] == 0) {
 			this.ranges[i] = NaN;
-			badIndeces.push(i);
 		}
 	}
 
 	this.walls = rawPose.walls;
 	for(var i=0; i<this.walls.length; ++i) {
-		this.walls[i][0] = Number(this.walls[i][0]); this.walls[i][1] = Number(this.walls[i][1]);
-		var lidarForwardPosition = this.position.slice(0); lidarForwardPosition[0] += lidarForwardDistance;
+		this.walls[i][0] = Number(this.walls[i][0]);
+		this.walls[i][1] = Number(this.walls[i][1]);
+
 		var doNotNeed1 = distanceSquared(this.walls[i].slice(0, 2), this.position.slice(0, 2)) < lidarMinDistanceSquared;
 		var doNotNeed2 = isNaN(this.walls[i][0]) || isNaN(this.walls[i][1]);
 		var doNotNeed3 = this.walls[i][0] == 0 && this.walls[i][1] == 0;
+		
 		if(doNotNeed1 || doNotNeed2 || doNotNeed3) {
 			this.walls.splice(i, 1);
 			--i;
 		}
 		else {
 			this.walls[i].push(1);
-			this.walls[i] = numeric.dot(makeRotationMatrix(this.angle), this.walls[i]);
-			this.walls[i] = numeric.dot(makeTranslationMatrix(this.position[0], this.position[1]), this.walls[i]);
+			//this.walls[i] = numeric.dot(makeRotationMatrix(this.angle), this.walls[i]);
+			//this.walls[i] = numeric.dot(makeTranslationMatrix(this.position[0], this.position[1]), this.walls[i]);
 		}
 	}
 }
