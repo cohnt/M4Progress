@@ -42,12 +42,6 @@ void worldState::convertToRobotFrame() {
 		);
 		t += tInc;
 	}
-	for(int i=0; i<walls.size(); ++i) {
-		if(walls[i][0] != walls[i][0] || walls[i][1] != walls[i][1] || walls[i][2] != walls[i][2]) {
-			walls.erase(walls.begin() + i);
-			--i;
-		}
-	}
 }
 double worldState::convertToWorldFrame() {
 	for(int i=0; i<walls.size(); ++i) {
@@ -65,8 +59,8 @@ double worldState::convertToWorldFrame() {
 void worldState::newOdometry(geometry_msgs::Pose odom) {
 	odometry = odom;
 	theta = static_cast<double>(atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z)))));
-	walls.resize(0);
-	worldState::convertToRobotFrame();
+	//walls.resize(0);
+	//worldState::convertToRobotFrame();
 }
 double worldState::newBaseScan(sensor_msgs::LaserScan base) {
 	baseScan = base;

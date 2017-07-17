@@ -128,8 +128,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		mutex.lock();
 		needOdom = true;
 		lastBaseScan = *msg;
-		lastWorldState.newBaseScan(lastBaseScan);
 		lastWorldState.newOdometry(lastOdomPose);
+		lastWorldState.newBaseScan(lastBaseScan);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		//std::vector<std::array<double, 3>> walls = lastWorldState.getWalls();
 		//std::cout << "\n\n\nPRINTING WALLS:" << std::endl;
