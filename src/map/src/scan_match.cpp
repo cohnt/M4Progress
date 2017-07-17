@@ -226,8 +226,8 @@ std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newSc
 				else {
 					oldScanPoints[i] = newWallsVector[i];
 				}
-				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
-				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
+				newWallsVector[i][0] = /*translationVector[0] +*/ ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
+				newWallsVector[i][1] = /*translationVector[1] +*/ ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
 				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
 				if(x == x) {
 					iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
