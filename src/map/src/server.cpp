@@ -141,17 +141,17 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		//}
 		if(doSave(lastWorldState)) {
 			if(states.size() != 0) {
-				std::array<std::vector<std::array<double, 3>>, 2> output = optimizeScan(lastWorldState, states, config);
+				std::vector<std::vector<std::array<double, 3>>> output = optimizeScan(lastWorldState, states, config);
 				std::cout << "\n\n\n DOING TEH ICP:" << std::endl;
 				for(int i=0; i<output[0].size(); ++i) {
-					std::cout <<
-					output[0][i][0] << ", " <<
-					output[0][i][1] << ", " <<
-					output[0][i][2] << ", " <<
-					"\t" <<
-					output[1][i][0] << ", " <<
-					output[1][i][1] << ", " <<
-					output[1][i][2] << std::endl;
+					for(int j=0; j<output.size(); ++j) {
+						std::cout <<
+						output[j][i][0] << ", " <<
+						output[j][i][1] << ", " <<
+						output[j][i][2] << ", " <<
+						std::endl;
+					}
+					std::cout << std::endl;
 				}
 				std::cout << std::endl;
 			}

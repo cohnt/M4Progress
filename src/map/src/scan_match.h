@@ -19,6 +19,8 @@ struct icpOutput {
 	std::array<std::array<double, 3>, 3> rotationMatrix;
 	std::array<double, 2> translation;
 	double theta;
+	std::array<double, 2> a;
+	std::array<double, 2> a1;
 };
 struct svdOutput {
 	std::array<std::array<double, 2>, 2> U;
@@ -30,6 +32,6 @@ std::vector<std::vector<int>> matchPoints(std::vector<std::vector<double>> pc1, 
 svdOutput SVD(std::vector<std::vector<double>> A);
 void transpose(std::vector<std::vector<double>> &m);
 icpOutput runICP(std::vector<std::vector<double>> set1, std::vector<std::vector<double>> set2);
-std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
+std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
 
 #endif

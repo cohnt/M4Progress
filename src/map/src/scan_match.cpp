@@ -166,9 +166,9 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 		}
 	}
 
-	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0])};
+	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1};
 }
-std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
+std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::array<double, 3>> knownPoints;
 	bool finished = false;
 	int totalLoopCount;
@@ -193,6 +193,8 @@ std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newSc
 			knownPoints.push_back(walls[j]);
 		}
 	}
+
+	std::vector<std::vector<std::array<double, 3>>> returnData;
 
 	totalLoopCount = 0;
 	while(!finished) {
@@ -219,6 +221,36 @@ std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newSc
 			std::array<double, 2> translationVector = results.translation;
 			double angle = results.theta;
 
+			std::vector<std::array<double, 3>> b0 {
+				std::array<double, 3> {
+					translationVector[0],
+					translationVector[1],
+					rotationMatrix[0][0]
+				}
+			};
+			std::vector<std::array<double, 3>> b1 {
+				std::array<double, 3> {
+					rotationMatrix[0][1],
+					rotationMatrix[1][0],
+					rotationMatrix[1][1]
+				}
+			};
+			std::vector<std::array<double, 3>> b2 {
+				std::array<double, 3> {
+					results.a[0],
+					results.a[1],
+					results.a1[0]
+				}
+			};
+			std::vector<std::array<double, 3>> b3 {
+				std::array<double, 3> {
+					results.a1[1],
+					1,
+					1
+				}
+			};
+
+			//returnData.push_back(newWallsVector);
 			for(int i=0; i<newWallsVector.size(); ++i) {
 				if(i >= oldScanPoints.size()) {
 					oldScanPoints.push_back(newWallsVector[i]);
@@ -226,17 +258,22 @@ std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newSc
 				else {
 					oldScanPoints[i] = newWallsVector[i];
 				}
-				newWallsVector[i][0] = /*translationVector[0] +*/ ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
-				newWallsVector[i][1] = /*translationVector[1] +*/ ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
+				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
+				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
 				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
 				if(x == x) {
 					iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
 				}
 			}
+			//returnData.push_back(newWallsVector);
+			returnData.push_back(b0);
+			returnData.push_back(b1);
+			returnData.push_back(b2);
+			returnData.push_back(b3);
 			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
 
 			if(iterationAverageSquaredDistance == 0) {
-				return std::array<std::vector<std::array<double, 3>>, 2>{oldScanPoints, newWallsVector};
+				break;
 			}
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
@@ -249,6 +286,10 @@ std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newSc
 				icpLoopCounter = 0;
 			}
 
+			for(int i=0; i<knownPoints.size(); ++i) {
+				knownPoints[i] = newWallsVector[i];
+			}
+
 			/*scanAngleError += angle;
 			scanPositionError[0] += translationVector[0];
 			scanPositionError[1] += translationVector[1];
@@ -257,6 +298,12 @@ std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newSc
 		}
 	}
 
-	return std::array<std::vector<std::array<double, 3>>, 2>();
+	for(int i=0; i<newScan.walls.size(); ++i) {
+		newScan.walls[i] = knownPoints[i];
+	}
+
+	return returnData;
+
+	//return std::vector<std::vector<std::array<double, 3>>>();
 	//return icpLoopCounter;
 }
