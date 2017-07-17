@@ -42,6 +42,12 @@ void worldState::convertToRobotFrame() {
 		);
 		t += tInc;
 	}
+	for(int i=0; i<walls.size(); ++i) {
+		if(walls[i][0] != walls[i][0] || walls[i][1] != walls[i][1] || walls[i][2] != walls[i][2]) {
+			walls.erase(walls.begin() + i);
+			--i;
+		}
+	}
 }
 double worldState::convertToWorldFrame() {
 	for(int i=0; i<walls.size(); ++i) {
@@ -51,6 +57,7 @@ double worldState::convertToWorldFrame() {
 	for(int i=0; i<walls.size(); ++i) {
 		if(walls[i][0] != walls[i][0] || walls[i][1] != walls[i][1] || walls[i][2] != walls[i][2]) {
 			walls.erase(walls.begin() + i);
+			--i;
 		}
 	}
 	return theta;

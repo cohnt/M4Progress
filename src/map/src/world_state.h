@@ -11,13 +11,14 @@ class worldState {
 	private:
 		geometry_msgs::Pose odometry;
 		sensor_msgs::LaserScan baseScan;
-		std::vector<std::array<double, 3>> walls;
 		double theta;
 		double lidarForwardDistance;
 		void convertToRobotFrame();
 		double convertToWorldFrame();
 
 	public:
+		std::vector<std::array<double, 3>> walls;
+		
 		worldState();
 		worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base, double lidarDistance);
 

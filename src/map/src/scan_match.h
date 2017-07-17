@@ -30,6 +30,6 @@ std::vector<std::vector<int>> matchPoints(std::vector<std::vector<double>> pc1, 
 svdOutput SVD(std::vector<std::vector<double>> A);
 void transpose(std::vector<std::vector<double>> &m);
 icpOutput runICP(std::vector<std::vector<double>> set1, std::vector<std::vector<double>> set2);
-int optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
+std::array<std::vector<std::array<double, 3>>, 2> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
 
 #endif
