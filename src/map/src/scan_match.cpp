@@ -235,20 +235,6 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 					rotationMatrix[1][1]
 				}
 			};
-			std::vector<std::array<double, 3>> b2 {
-				std::array<double, 3> {
-					results.a[0],
-					results.a[1],
-					results.a1[0]
-				}
-			};
-			std::vector<std::array<double, 3>> b3 {
-				std::array<double, 3> {
-					results.a1[1],
-					1,
-					1
-				}
-			};
 
 			//returnData.push_back(newWallsVector);
 			for(int i=0; i<newWallsVector.size(); ++i) {
@@ -258,23 +244,28 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 				else {
 					oldScanPoints[i] = newWallsVector[i];
 				}
-				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
-				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
-				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
-				if(x == x) {
+				double x = newWallsVector[i][0];
+				double y = newWallsVector[i][1];
+				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*x)+(rotationMatrix[0][1]*y));
+				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*x)+(rotationMatrix[1][1]*y));
+				double d2 = distanceSquared(oldScanPoints[i], newWallsVector[i]);
+				if(d2 == d2) {
 					iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
 				}
 			}
 			//returnData.push_back(newWallsVector);
-			returnData.push_back(b0);
-			returnData.push_back(b1);
-			returnData.push_back(b2);
-			returnData.push_back(b3);
+//			returnData.push_back(b0);
+//			returnData.push_back(b1);
+//			returnData.push_back(b2);
+//			returnData.push_back(b3);
 			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
 
 			if(iterationAverageSquaredDistance == 0) {
 				return returnData;
 			}
+
+			returnData.push_back(b0);
+			returnData.push_back(b1);
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
@@ -303,7 +294,4 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 	}
 
 	return returnData;
-
-	//return std::vector<std::vector<std::array<double, 3>>>();
-	//return icpLoopCounter;
 }
