@@ -132,10 +132,22 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		lastWorldState.newBaseScan(lastBaseScan);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
+<<<<<<< HEAD
+=======
+		//std::vector<std::array<double, 3>> walls = lastWorldState.getWalls();
+		//std::cout << "\n\n\nPRINTING WALLS:" << std::endl;
+		//for(int i=0; i<walls.size(); ++i) {
+		//	for(int j=0; j<walls[i].size(); ++j) {
+		//		std::cout << walls[i][j] << ": " << (walls[i][j] == walls[i][j]) << "\t";
+		//	}
+		//	std::cout << std::endl;
+		//}
+>>>>>>> parent of 6588531... I FIXED THE POSITION BUGgit add --allgit add --all!
 		if(doSave(lastWorldState)) {
 			if(states.size() != 0) {
 				std::vector<std::vector<std::array<double, 3>>> output = optimizeScan(lastWorldState, states, config);
 				std::cout << "\n\n\n DOING TEH ICP:" << std::endl;
+<<<<<<< HEAD
 				int maxSize = 0;
 				for(int i=0; i<output.size(); ++i) {
 					if(output[i].size() > maxSize) {
@@ -153,6 +165,19 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 					}
 					std::cout << std::endl;
 				}
+=======
+				for(int i=0; i<output[0].size(); ++i) {
+					for(int j=0; j<output.size(); ++j) {
+						std::cout <<
+						output[j][i][0] << ", " <<
+						output[j][i][1] << ", " <<
+						output[j][i][2] << ", " <<
+						std::endl;
+					}
+					std::cout << std::endl;
+				}
+				std::cout << std::endl;
+>>>>>>> parent of 6588531... I FIXED THE POSITION BUGgit add --allgit add --all!
 			}
 			states.push_back(lastWorldState);
 			newDataForClient = true;

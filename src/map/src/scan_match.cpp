@@ -288,6 +288,15 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			returnData.push_back(b0);
 			returnData.push_back(b1);
 			returnData.push_back(b2);
+<<<<<<< HEAD
+=======
+			returnData.push_back(b3);
+			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
+
+			if(iterationAverageSquaredDistance == 0) {
+				break;
+			}
+>>>>>>> parent of 6588531... I FIXED THE POSITION BUGgit add --allgit add --all!
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
