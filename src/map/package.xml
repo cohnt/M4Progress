@@ -48,9 +48,6 @@
   <run_depend>roscpp</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>std_msgs</run_depend>
-  <build_depend>liblapack-dev</build_depend>
-  <build_depend>libblas-dev</build_depend>
-  <build_depend>libarmadillo-dev</build_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

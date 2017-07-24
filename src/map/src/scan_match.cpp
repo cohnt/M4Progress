@@ -1,7 +1,7 @@
 #include "scan_match.h"
 #include <math.h>
 #include <limits>
-#include <armadillo>
+#include <eigen3/Eigen/Dense>
 
 double distanceSquared(std::array<double, 3> a, std::array<double, 3> b) {
 	double sum = 0;
@@ -17,7 +17,7 @@ std::vector<std::array<int, 2>> matchPoints(std::vector<std::array<double, 3>> &
 	for(int i=0; i<pc2.size(); ++i) {
 		if(pc2[i][0] == pc2[i][0] && pc2[i][1] == pc2[i][1] && pc2[i][2] == pc2[i][2]) {
 			if(rand() % 100 < 10) {
-				double smallestSquaredDistance = DBL_MAX;
+				double smallestSquaredDistance = FLT_MAX;
 				int smallestSquaredDistanceIndex;
 				for(int j=pc1.size()-1; j>=0; --j) {
 					if(pc1[i][0] == pc1[i][0] && pc1[i][1] == pc1[i][1] && pc1[i][2] == pc1[i][2]) {
@@ -42,18 +42,22 @@ std::vector<std::array<int, 2>> matchPoints(std::vector<std::array<double, 3>> &
 	return pairIndexes;
 }
 svdOutput SVD(std::array<std::array<double, 2>, 2> A) {
-	arma::mat Am(2, 2, arma::fill::zeros);
-	for(int i=0; i<2; ++i) {
-		for(int j=0; j<2; ++j) {
-			Am(i, j) = A[i][j];
-		}
-	}
+	using namespace Eigen;
 
-	arma::mat Um;
-	arma::vec Sv;
-	arma::mat Vm;
+	MatrixXf m(2, 2);
+	m(0, 0) = A[0][0];
+	m(1, 0) = A[1][0];
+	m(0, 1) = A[0][1];
+	m(1, 1) = A[1][1];
 
-	arma::svd(Um, Sv, Vm, Am);
+	JacobiSVD<MatrixXf> svd(m, ComputeThinU | ComputeThinV);
+
+	MatrixXf Um = svd.matrixU();
+	MatrixXf Vm = svd.matrixV();
+	MatrixXf Id(2, 2);
+	Id(0, 0) = 1; Id(0, 1) = 0; Id(1, 0) = 0; Id(1, 1) = 1;
+	VectorXf Sv = svd.singularValues();
+	MatrixXf Sm = Id*Sv;
 
 	std::array<std::array<double, 2>, 2> U = {
 		std::array<double, 2>{Um(0, 0), Um(0, 1)},
@@ -84,21 +88,6 @@ void transpose(std::array<std::array<double, 2>, 2> &m) {
 			}
 		}
 	}
-}
-std::array<std::array<double, 3>, 3> matrixMultiply(std::array<std::array<double, 3>, 3> a, std::array<std::array<double, 3>, 3> b) {
-	std::array<std::array<double, 3>, 3> c = {
-		std::array<double, 3>{0, 0, 0},
-		std::array<double, 3>{0, 0, 0},
-		std::array<double, 3>{0, 0, 0}
-	}; //c = ab
-	for(int i=0; i<c.size(); ++i) {
-		for(int j=0; j<c[i].size(); ++j) {
-			for(int k=0; k<c[i].size(); ++k) {
-				c[i][j] += a[i][k]*b[k][j];
-			}
-		}
-	}
-	return c;
 }
 icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array<double, 3>> set2) {
 	std::vector<std::array<double, 2>> pi;
@@ -153,26 +142,14 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 	std::array<std::array<double, 2>, 2> U = out.U;
 	std::array<std::array<double, 2>, 2> S = out.S;
 	std::array<std::array<double, 2>, 2> V = out.V;
-	std::array<std::array<double, 3>, 3> Vmatrix = {
-		std::array<double, 3>{V[0][0], V[0][1], 0},
-		std::array<double, 3>{V[1][0], V[1][1], 0},
-		std::array<double, 3>{      0,       0, 1},
-	};
-	transpose(U);
-	std::array<std::array<double, 3>, 3> UT = {
-		std::array<double, 3>{U[0][0], U[0][1], 0},
-		std::array<double, 3>{U[1][0], U[1][1], 0},
-		std::array<double, 3>{      0,       0, 1},
-	};
-	transpose(V);
-	std::array<std::array<double, 3>, 3> VT = {
-		std::array<double, 3>{V[0][0], V[0][1], 0},
-		std::array<double, 3>{V[1][0], V[1][1], 0},
-		std::array<double, 3>{      0,       0, 1},
-	};
+	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
+	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
 
-	std::array<std::array<double, 3>, 3> rotationMatrix = matrixMultiply(Vmatrix, UT);
-
+	std::array<std::array<double, 3>, 3> rotationMatrix = { //V*UT
+		std::array<double, 3>{(V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1]), 0},
+		std::array<double, 3>{(V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1]), 0},
+		std::array<double, 3>{0, 0, 1}
+	};
 	std::array<double, 2> translationVector = {
 		p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])),
 		p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1]))
@@ -260,9 +237,16 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			};
 			std::vector<std::array<double, 3>> b2 {
 				std::array<double, 3> {
-					angle,
-					0,
-					0
+					results.a[0],
+					results.a[1],
+					results.a1[0]
+				}
+			};
+			std::vector<std::array<double, 3>> b3 {
+				std::array<double, 3> {
+					results.a1[1],
+					1,
+					1
 				}
 			};
 
@@ -274,29 +258,23 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 				else {
 					oldScanPoints[i] = newWallsVector[i];
 				}
-				double x = newWallsVector[i][0];
-				double y = newWallsVector[i][1];
-				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*x)+(rotationMatrix[0][1]*y));
-				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*x)+(rotationMatrix[1][1]*y));
-				double d2 = distanceSquared(oldScanPoints[i], newWallsVector[i]);
-				if(d2 == d2) {
+				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
+				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
+				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
+				if(x == x) {
 					iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
 				}
 			}
-			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
-
+			//returnData.push_back(newWallsVector);
 			returnData.push_back(b0);
 			returnData.push_back(b1);
 			returnData.push_back(b2);
-<<<<<<< HEAD
-=======
 			returnData.push_back(b3);
 			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
 
 			if(iterationAverageSquaredDistance == 0) {
-				break;
+				return returnData;
 			}
->>>>>>> parent of 6588531... I FIXED THE POSITION BUGgit add --allgit add --all!
 
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
@@ -306,6 +284,10 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			}
 			else {
 				icpLoopCounter = 0;
+			}
+
+			for(int i=0; i<knownPoints.size(); ++i) {
+				knownPoints[i] = newWallsVector[i];
 			}
 
 			/*scanAngleError += angle;
@@ -321,4 +303,7 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 	}
 
 	return returnData;
+
+	//return std::vector<std::vector<std::array<double, 3>>>();
+	//return icpLoopCounter;
 }
