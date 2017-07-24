@@ -8,6 +8,7 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <math.h>
+#include <time.h>
 #include <mutex>
 
 #include "world_state.h"
@@ -147,7 +148,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 							std::cout <<
 							output[j][i][0] << ", " <<
 							output[j][i][1] << ", " <<
-							output[j][i][2] << "\t";
+							output[j][i][2] << std::endl;
 						}
 					}
 					std::cout << std::endl;
@@ -161,6 +162,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 }
 
 int main(int argc, char **argv) {
+	srand(time(NULL));
+
 	states.reserve(NUM_STATES_TO_RESERVE);
 
 	server echoServer;
