@@ -37,8 +37,8 @@ bool justGotConfig = false;
 
 std::mutex mutex;
 
-double minPoseTranslationToSave = pow(0.02, 2);
-double minPoseRotationToSave = M_PI / 180;
+double minPoseTranslationToSave = pow(0.001, 2);
+double minPoseRotationToSave = M_PI / 1800;
 double lidarDistance = 0.23;
 
 icpConfig config;
@@ -55,6 +55,7 @@ bool doSave(worldState state) {
 		return true;
 	}
 	else if(justGotConfig) {
+		states.resize(0);
 		justGotConfig = false;
 		return true;
 	}
@@ -63,8 +64,9 @@ bool doSave(worldState state) {
 	std::vector<double> currentPoseVector = {currentPose.position.x, currentPose.position.y, currentPose.position.z};
 	std::vector<double> oldPoseVector = {oldPose.position.x, oldPose.position.y, oldPose.position.z};
 	std::cout << "d^2: " << distanceSquared(currentPoseVector, oldPoseVector) << ", min: " << minPoseTranslationToSave << std::endl;
-	std::cout << "dTheta: " << abs(state.getTheta()-states[states.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
-	return distanceSquared(currentPoseVector, oldPoseVector) || (abs(state.getTheta()-states[states.size()-1].getTheta()) > minPoseRotationToSave);
+	std::cout << "t1: " << states[states.size()-1].getTheta() << " t2: " << state.getTheta() << std::endl;
+	std::cout << "dTheta: " << fabs(state.getTheta()-states[states.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
+	return distanceSquared(currentPoseVector, oldPoseVector) > minPoseTranslationToSave || (fabs(state.getTheta()-states[states.size()-1].getTheta()) > minPoseRotationToSave);
 }
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	try {
@@ -131,30 +133,23 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		lastWorldState.newBaseScan(lastBaseScan);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
-		std::vector<std::array<double, 3>> walls = lastWorldState.getWalls();
-		//std::cout << "\n\n\nPRINTING WALLS:" << std::endl;
-		//for(int i=0; i<walls.size(); ++i) {
-		//	for(int j=0; j<walls[i].size(); ++j) {
-		//		std::cout << walls[i][j] << ": " << (walls[i][j] == walls[i][j]) << "\t";
-		//	}
-		//	std::cout << std::endl;
-		//}
+		std::cout << "doSave? " << doSave(lastWorldState) << std::endl;
 		if(doSave(lastWorldState)) {
-			if(states.size() != 0) {
-				std::vector<std::vector<std::array<double, 3>>> output = optimizeScan(lastWorldState, states, config);
-				std::cout << "\n\n\n DOING TEH ICP:" << std::endl;
-				for(int i=0; i<output[0].size(); ++i) {
-					for(int j=0; j<output.size(); ++j) {
-						std::cout <<
-						output[j][i][0] << ", " <<
-						output[j][i][1] << ", " <<
-						output[j][i][2] << ", " <<
-						std::endl;
-					}
-					std::cout << std::endl;
-				}
-				std::cout << std::endl;
-			}
+			//if(states.size() != 0) {
+			//	std::vector<std::vector<std::array<double, 3>>> output = optimizeScan(lastWorldState, states, config);
+			//	std::cout << "\n\n\n DOING TEH ICP:" << std::endl;
+			//	for(int i=0; i<output[0].size(); ++i) {
+			//		for(int j=0; j<output.size(); ++j) {
+			//			std::cout <<
+			//			output[j][i][0] << ", " <<
+			//			output[j][i][1] << ", " <<
+			//			output[j][i][2] << ", " <<
+			//			std::endl;
+			//		}
+			//		std::cout << std::endl;
+			//	}
+			//	std::cout << std::endl;
+			//}
 			states.push_back(lastWorldState);
 			newDataForClient = true;
 		}
