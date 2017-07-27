@@ -21,6 +21,12 @@ struct icpOutput {
 	double theta;
 	std::array<double, 2> a;
 	std::array<double, 2> a1;
+	std::array<std::array<double, 2>, 2> H;
+	std::array<std::array<double, 2>, 2> U;
+	std::array<std::array<double, 2>, 2> S;
+	std::array<std::array<double, 2>, 2> V;
+	int piSize;
+	int pi1Size;
 };
 struct svdOutput {
 	std::array<std::array<double, 2>, 2> U;

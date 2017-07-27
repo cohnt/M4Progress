@@ -50,7 +50,7 @@ svdOutput SVD(std::array<std::array<double, 2>, 2> A) {
 	m(0, 1) = A[0][1];
 	m(1, 1) = A[1][1];
 
-	JacobiSVD<MatrixXf> svd(m, ComputeThinU | ComputeThinV);
+	BDCSVD<MatrixXf> svd(m, ComputeThinU | ComputeThinV);
 
 	MatrixXf Um = svd.matrixU();
 	MatrixXf Vm = svd.matrixV();
@@ -166,7 +166,7 @@ icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array
 		}
 	}
 
-	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1};
+	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1, H, U, S, V, set1.size(), set2.size()};
 }
 std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::array<double, 3>> knownPoints;
@@ -189,7 +189,7 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 	knownPoints.reserve(cfg.minICPComparePoints + BASE_SCAN_MAX_NUM_POINTS);
 	while(i >= 0 && knownPoints.size() <= cfg.minICPComparePoints) {
 		std::vector<std::array<double, 3>> walls = map[i].getWalls();
-		for(int j=0; j<BASE_SCAN_MAX_NUM_POINTS; ++j) {
+		for(int j=0; j<walls[j].size(); ++j) {
 			knownPoints.push_back(walls[j]);
 		}
 	}
@@ -213,10 +213,10 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			oldPoints.reserve(newWallsVector.size());
 			newPoints.reserve(newWallsVector.size());
 			for(int i=0; i<pointPairsIndexes.size(); ++i) {
-				oldPoints.push_back(knownPoints[pointPairsIndexes[i][0]]);
-				newPoints.push_back(newWallsVector[pointPairsIndexes[i][1]]);
+				oldPoints.push_back(knownPoints[pointPairsIndexes[i][1]]);
+				newPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
 			}
-			icpOutput results = runICP(oldPoints, newPoints);
+			icpOutput results = runICP(newPoints, newPoints);
 			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
 			std::array<double, 2> translationVector = results.translation;
 			double angle = results.theta;
@@ -237,16 +237,86 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			};
 			std::vector<std::array<double, 3>> b2 {
 				std::array<double, 3> {
-					results.a[0],
-					results.a[1],
-					results.a1[0]
+					results.H[0][0],
+					results.H[0][1],
+					results.H[1][0]
 				}
 			};
 			std::vector<std::array<double, 3>> b3 {
 				std::array<double, 3> {
-					results.a1[1],
+					results.H[1][1],
 					1,
 					1
+				}
+			};
+			std::vector<std::array<double, 3>> b4 {
+				std::array<double, 3> {
+					results.U[0][0],
+					results.U[0][1],
+					results.U[1][0]
+				}
+			};
+			std::vector<std::array<double, 3>> b5 {
+				std::array<double, 3> {
+					results.U[1][1],
+					1,
+					1
+				}
+			};
+			std::vector<std::array<double, 3>> b6 {
+				std::array<double, 3> {
+					results.S[0][0],
+					results.S[0][1],
+					results.S[1][0]
+				}
+			};
+			std::vector<std::array<double, 3>> b7 {
+				std::array<double, 3> {
+					results.S[1][1],
+					1,
+					1
+				}
+			};
+			std::vector<std::array<double, 3>> b8 {
+				std::array<double, 3> {
+					results.V[0][0],
+					results.V[0][1],
+					results.V[1][0]
+				}
+			};
+			std::vector<std::array<double, 3>> b9 {
+				std::array<double, 3> {
+					results.V[1][1],
+					1,
+					1
+				}
+			};
+			std::vector<std::array<double, 3>> b10 {
+				std::array<double, 3> {
+					results.a[0],
+					results.a[1],
+					10
+				}
+			};
+			std::vector<std::array<double, 3>> b11 {
+				std::array<double, 3> {
+					results.a1[0],
+					results.a1[1],
+					10
+				}
+			};
+			std::vector<std::array<double, 3>> b12 {
+				std::array<double, 3> {
+					results.piSize,
+					results.pi1Size,
+					20
+				}
+			};
+			std::vector<std::array<double, 3>> b13 {
+				std::array<double, 3> {
+					knownPoints.size(),
+					newWallsVector.size(),
+					20
 				}
 			};
 
@@ -258,19 +328,37 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 				else {
 					oldScanPoints[i] = newWallsVector[i];
 				}
-				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*newWallsVector[i][0])+(rotationMatrix[0][1]*newWallsVector[i][1]));
-				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*newWallsVector[i][0])+(rotationMatrix[1][1]*newWallsVector[i][1]));
-				double x = distanceSquared(oldScanPoints[i], newWallsVector[i]);
-				if(x == x) {
-					iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
-				}
+				double x = newWallsVector[i][0];
+				double y = newWallsVector[i][1];
+				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*x)+(rotationMatrix[0][1]*y));
+				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*x)+(rotationMatrix[1][1]*y));
+				double d2 = distanceSquared(oldScanPoints[i], newWallsVector[i]);
+				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
 			}
+			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
+			std::vector<std::array<double, 3>> b14 {
+				std::array<double, 3> {
+					pointPairsIndexes.size(),
+					iterationAverageSquaredDistance,
+					20
+				}
+			};
 			//returnData.push_back(newWallsVector);
-			returnData.push_back(b0);
-			returnData.push_back(b1);
+			//returnData.push_back(b0);
+			//returnData.push_back(b1);
 			returnData.push_back(b2);
 			returnData.push_back(b3);
-			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
+			//returnData.push_back(b4);
+			//returnData.push_back(b5);
+			//returnData.push_back(b6);
+			//returnData.push_back(b7);
+			//returnData.push_back(b8);
+			//returnData.push_back(b9);
+			//returnData.push_back(b10);
+			//returnData.push_back(b11);
+			//returnData.push_back(b12);
+			//returnData.push_back(b13);
+			//returnData.push_back(b14);
 
 			if(iterationAverageSquaredDistance == 0) {
 				return returnData;
@@ -286,20 +374,17 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 				icpLoopCounter = 0;
 			}
 
-			for(int i=0; i<knownPoints.size(); ++i) {
-				knownPoints[i] = newWallsVector[i];
-			}
-
 			/*scanAngleError += angle;
 			scanPositionError[0] += translationVector[0];
 			scanPositionError[1] += translationVector[1];
 			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
 			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);*/
 		}
+		break;
 	}
 
 	for(int i=0; i<newScan.walls.size(); ++i) {
-		newScan.walls[i] = knownPoints[i];
+		newScan.walls[i] = newWallsVector[i];
 	}
 
 	return returnData;
