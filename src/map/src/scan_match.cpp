@@ -107,83 +107,83 @@ void transpose(std::array<std::array<double, 2>, 2> &m) {
 	}
 }
 icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array<double, 3>> set2) {
-//	std::vector<std::array<double, 2>> pi;
-//	std::vector<std::array<double, 2>> pi1;
-//
-//	for(int i=0; i<set2.size(); ++i) {
-//		pi.push_back(std::array<double, 2>{set1[i][0], set1[i][1]});
-//		pi1.push_back(std::array<double, 2>{set2[i][0], set2[i][1]});
-//	}
-//
-//	std::array<double, 2> p = {0, 0};
-//	std::array<double, 2> p1 = {0, 0};
-//
-//	for(int i=0; i<pi.size(); ++i) {
-//		p[0] += pi[i][0];
-//		p[1] += pi[i][1];
-//		p1[0] += pi1[i][0];
-//		p1[1] += pi1[i][1];
-//	}
-//	p[0] = p[0]/pi.size();
-//	p[1] = p[1]/pi.size();
-//	p1[0] = p1[0]/pi1.size();
-//	p1[1] = p1[1]/pi1.size();
-//
-//	std::vector<std::array<double, 2>> qi;
-//	std::vector<std::array<double, 2>> qi1;
-//
-//	for(int i=0; i<pi.size(); ++i) {
-//		qi.push_back(std::array<double, 2>{
-//			pi[i][0]-p[0],
-//			pi[i][1]-p[1]
-//		});
-//		qi1.push_back(std::array<double, 2>{
-//			pi1[i][0]-p1[0],
-//			pi1[i][1]-p1[1]
-//		});
-//	}
-//
-//	std::array<std::array<double, 2>, 2> H = {
-//		std::array<double, 2>{0, 0},
-//		std::array<double, 2>{0, 0}
-//	};
-//	for(int i=0; i<qi.size(); ++i){
-//		H[0][0] += qi1[i][0]*qi[i][0];
-//		H[0][1] += qi1[i][1]*qi[i][0];
-//		H[1][0] += qi1[i][0]*qi[i][1];
-//		H[1][1] += qi1[i][1]*qi[i][1];
-//	}
-//
-//	svdOutput out = SVD(H);
-//
-//	std::array<std::array<double, 2>, 2> U = out.U;
-//	std::array<std::array<double, 2>, 2> S = out.S;
-//	std::array<std::array<double, 2>, 2> V = out.V;
-//	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
-//	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
-//
-//	std::array<std::array<double, 3>, 3> rotationMatrix = { //V*UT
-//		std::array<double, 3>{(V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1]), 0},
-//		std::array<double, 3>{(V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1]), 0},
-//		std::array<double, 3>{0, 0, 1}
-//	};
-//	std::array<double, 2> translationVector = {
-//		p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])),
-//		p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1]))
-//	};
-//
-//	for(int i=0; i<2; ++i) {
-//		for(int j=0; j<2; ++j) {
-//			if(rotationMatrix[i][j] > 1) {
-//				rotationMatrix[i][j] = 1;
-//			}
-//			else if(rotationMatrix[i][j] < -1) {
-//				rotationMatrix[i][j] = -1;
-//			}
-//		}
-//	}
-//
-//	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1, H, U, S, V, set1.size(), set2.size()};
+	std::vector<std::array<double, 2>> pi;
+	std::vector<std::array<double, 2>> pi1;
+
+	for(int i=0; i<set2.size(); ++i) {
+		pi.push_back(std::array<double, 2>{set1[i][0], set1[i][1]});
+		pi1.push_back(std::array<double, 2>{set2[i][0], set2[i][1]});
+	}
+
+	std::array<double, 2> p = {0, 0};
+	std::array<double, 2> p1 = {0, 0};
+
+	for(int i=0; i<pi.size(); ++i) {
+		p[0] += pi[i][0];
+		p[1] += pi[i][1];
+		p1[0] += pi1[i][0];
+		p1[1] += pi1[i][1];
+	}
+	p[0] = p[0]/pi.size();
+	p[1] = p[1]/pi.size();
+	p1[0] = p1[0]/pi1.size();
+	p1[1] = p1[1]/pi1.size();
+
+	std::vector<std::array<double, 2>> qi;
+	std::vector<std::array<double, 2>> qi1;
+
+	for(int i=0; i<pi.size(); ++i) {
+		qi.push_back(std::array<double, 2>{
+			pi[i][0]-p[0],
+			pi[i][1]-p[1]
+		});
+		qi1.push_back(std::array<double, 2>{
+			pi1[i][0]-p1[0],
+			pi1[i][1]-p1[1]
+		});
+	}
+
+	std::array<std::array<double, 2>, 2> H = {
+		std::array<double, 2>{0, 0},
+		std::array<double, 2>{0, 0}
+	};
+	for(int i=0; i<qi.size(); ++i){
+		H[0][0] += qi1[i][0]*qi[i][0];
+		H[0][1] += qi1[i][1]*qi[i][0];
+		H[1][0] += qi1[i][0]*qi[i][1];
+		H[1][1] += qi1[i][1]*qi[i][1];
+	}
+
+	svdOutput out = SVD(H);
+
+	std::array<std::array<double, 2>, 2> U = out.U;
+	std::array<std::array<double, 2>, 2> S = out.S;
+	std::array<std::array<double, 2>, 2> V = out.V;
+	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
+	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
+
+	std::array<std::array<double, 3>, 3> rotationMatrix = { //V*UT
+		std::array<double, 3>{(V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1]), 0},
+		std::array<double, 3>{(V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1]), 0},
+		std::array<double, 3>{0, 0, 1}
+	};
+	std::array<double, 2> translationVector = {
+		p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])),
+		p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1]))
+	};
+
+	for(int i=0; i<2; ++i) {
+		for(int j=0; j<2; ++j) {
+			if(rotationMatrix[i][j] > 1) {
+				rotationMatrix[i][j] = 1;
+			}
+			else if(rotationMatrix[i][j] < -1) {
+				rotationMatrix[i][j] = -1;
+			}
+		}
+	}
+
+	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1, H, U, S, V, set1.size(), set2.size()};
 }
 std::vector<std::array<double, 3>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::array<double, 3>> knownPoints;
@@ -240,10 +240,10 @@ std::vector<std::array<double, 3>> optimizeScan(worldState &newScan, std::vector
 			assert(retVal.size() > 0);
 
 			return retVal;
-//			icpOutput results = runICP(newPoints, newPoints);
-//			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
-//			std::array<double, 2> translationVector = results.translation;
-//			double angle = results.theta;
+			icpOutput results = runICP(newPoints, newPoints);
+			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
+			std::array<double, 2> translationVector = results.translation;
+			double angle = results.theta;
 //			for(int i=0; i<newWallsVector.size(); ++i) {
 //				if(i >= oldScanPoints.size()) {
 //					oldScanPoints.push_back(newWallsVector[i]);
