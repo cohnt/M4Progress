@@ -43,6 +43,7 @@ struct optimizationOutput {
 	std::array<std::array<double, 3>, 3> currentSLAM;
 };
 
+std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3> a, std::array<std::array<double, 3>, 3> b);
 std::vector<std::array<double, 3>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);
 svdOutput SVD(std::vector<std::vector<double>> A);
 void transpose(std::vector<std::vector<double>> &m);

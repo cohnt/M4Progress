@@ -11,6 +11,23 @@ double distanceSquared(std::array<double, 3> a, std::array<double, 3> b) {
 	}
 	return sum;
 }
+std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3> a, std::array<std::array<double, 3>, 3> b) {
+	std::array<std::array<double, 3>, 3> output = {
+		std::array<double, 3>{0, 0, 0},
+		std::array<double, 3>{0, 0, 0},
+		std::array<double, 3>{0, 0, 0}
+	};
+
+	for(int i=0; i<a.size(); ++i) {
+		for(int j=0; j<a[i].size(); ++j) {
+			for(int k=0; k<b.size(); ++k) {
+				output[i][j] += a[i][k] * b[k][j];
+			}
+		}
+	}
+
+	return output;
+}
 
 std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>> &pc1, std::vector<std::array<double, 3>> &pc2, icpConfig cfg) {
 	std::vector<std::array<double, 3>> pairIndexes;
@@ -289,8 +306,9 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 			scanAngleError += angle;
 			scanPositionError[0] += translationVector[0];
 			scanPositionError[1] += translationVector[1];
-			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
-			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);
+			scanTransformError = product(scanTransformError, rotationMatrix);
+			scanTransformError[0][2] += translationVector[0];
+			scanTransformError[1][2] += translationVector[1];
 		}
 	}
 
@@ -298,7 +316,7 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 		newScan.walls[i] = newWallsVector[i];
 	}
 
-	output.icpLoopCount = icpLoopCounter;
+	output.icpLoopCount = totalLoopCount;
 	output.netAngleError = scanAngleError;
 	output.netPositionError = scanPositionError;
 	output.currentSLAM = scanTransformError;
