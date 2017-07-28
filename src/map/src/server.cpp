@@ -158,10 +158,18 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 				//std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
 
-				slamTransform = product(slamTransform, output.currentSLAM);
+				std::cout << "Success? " << (output.success ? "Yes!" : "No!") << std::endl;
+
+				if(output.success) {
+					slamTransform = product(slamTransform, output.currentSLAM);
+					states.push_back(lastWorldState);
+					newDataForClient = true;
+				}
 			}
-			states.push_back(lastWorldState);
-			newDataForClient = true;
+			else {
+				states.push_back(lastWorldState);
+				newDataForClient = true;
+			}
 		}
 		mutex.unlock();
 	}

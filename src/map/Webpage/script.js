@@ -4,8 +4,8 @@ var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.23; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
                                 //Remember to change this value in the C++ code as well!
-var minRotationRecordChange = Math.PI / 180; //How much the robot has to rotate to trigger the pose being saved.
-var minPositionRecordChange = Math.pow(0.01, 2); //How much the robot has to move to trigger the pose being saved.
+var minRotationRecordChange = Math.PI / 1800; //How much the robot has to rotate to trigger the pose being saved.
+var minPositionRecordChange = Math.pow(0.001, 2); //How much the robot has to move to trigger the pose being saved.
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.25, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
@@ -28,12 +28,12 @@ var keycodes = {
 var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milliseconds the transformation update will accept for user-inputted rotation transformations.
 var printMatrixMinColWidth = 20;
 var lidarMinDistanceSquared = 0.1;
-var maxNumSavedPoses = 50;
+var maxNumSavedPoses = Infinity;
 var minICPComparePoints = 3000; //The minimum number of points ICP must use to compare.
 var maxICPLoopCount = 250; //The maximum number of times ICP can run.
 var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
-var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
+var icpNoMovementCounterThreshold = 8; //ICP must lead to no movement at least this many times for it to finish.
 var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
 var goodCorrespondenceThresholdSquared = Math.pow(0, 2);
 var maximumPointMatchDistance = 2;
@@ -63,6 +63,7 @@ var mouseLastPosition = [0, 0];
 var locked = true;
 var poses = [];
 var frameTimes = [];
+var numPosesToDisplay = 50;
 
 //Classes
 function pose(rawPose) {
@@ -160,12 +161,16 @@ function mainLoop() {
 	);
 
 	if(doIDrawWallsFill) {
-		for(var i=data.length-1; i>=0; --i) {
-			drawWallsFill(data[i]);
+		for(var i=numPosesToDisplay; i>=0; --i) {
+			if(i < data.length) {
+				drawWallsFill(data[i]);
+			}
 		}
 	}
-	for(var i=data.length-1; i>=0; --i) {
-		drawWalls(data[i]);
+	for(var i=numPosesToDisplay; i>=0; --i) {
+		if(i < data.length) {
+			drawWalls(data[i]);
+		}
 	}
 	drawRobotMarker(data[0]);
 	drawRobotFrameOfView(data[0]);

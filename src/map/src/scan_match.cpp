@@ -29,6 +29,26 @@ std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3
 	return output;
 }
 
+void removeDuplicatePoints(worldState &newScan, std::vector<worldState> map) {
+	std::vector<std::array<double, 3>> knownPoints;
+	int i=map.size()-1;
+	knownPoints.reserve(1000 + BASE_SCAN_MAX_NUM_POINTS);
+	while(i >= 0 && knownPoints.size() <= 1000) {
+		std::vector<std::array<double, 3>> walls = map[i].getWalls();
+		for(int j=0; j<walls.size(); ++j) {
+			knownPoints.push_back(walls[j]);
+		}
+	}
+	for(int i=0; i<newScan.walls.size(); ++i) {
+		for(int j=0; j<knownPoints.size(); ++j) {
+			if(distanceSquared(newScan.walls[i], knownPoints[j]) < 0.01*0.01) {
+				newScan.walls.erase(newScan.walls.begin() + i);
+				--i;
+				break;
+			}
+		}
+	}
+}
 std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>> &pc1, std::vector<std::array<double, 3>> &pc2, icpConfig cfg) {
 	std::vector<std::array<double, 3>> pairIndexes;
 
@@ -232,11 +252,13 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 	}
 
 	optimizationOutput output;
+	output.success = true;
 
 	totalLoopCount = 0;
 	while(!finished) {
 		++totalLoopCount;
 		if(totalLoopCount >= cfg.maxICPLoopCount) {
+			output.success = false;
 			//Failed scan
 			//TODO
 			break;
@@ -315,6 +337,8 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 	for(int i=0; i<newScan.walls.size(); ++i) {
 		newScan.walls[i] = newWallsVector[i];
 	}
+
+	//removeDuplicatePoints(newScan, map);
 
 	output.icpLoopCount = totalLoopCount;
 	output.netAngleError = scanAngleError;

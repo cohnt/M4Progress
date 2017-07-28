@@ -41,6 +41,7 @@ struct optimizationOutput {
 	double netAngleError;
 	std::array<double, 2> netPositionError;
 	std::array<std::array<double, 3>, 3> currentSLAM;
+	bool success;
 };
 
 std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3> a, std::array<std::array<double, 3>, 3> b);
