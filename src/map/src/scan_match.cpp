@@ -236,7 +236,7 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 				                                                              //retVal.push_back(std::array<double, 3>{pointPairsIndexes[i][2], 0, 0});
 			}
 
-			icpOutput results = runICP(newPoints, newPoints);
+			icpOutput results = runICP(newPoints, oldPoints);
 			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
 			std::array<double, 2> translationVector = results.translation;
 			double angle = results.theta;
@@ -269,6 +269,10 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 			}
 			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
 
+			output.avgD.push_back(iterationAverageSquaredDistance);
+			output.angleHistory.push_back(angle);
+			output.translationHistory.push_back(translationVector);
+
 			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
 				++icpLoopCounter;
 				if(icpLoopCounter >= cfg.icpNoMovementCounterThreshold) {
@@ -286,10 +290,10 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 //			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);*/
 		}
 	}
-//
-//	for(int i=0; i<newScan.walls.size(); ++i) {
-//		newScan.walls[i] = newWallsVector[i];
-//	}
+
+	for(int i=0; i<newScan.walls.size(); ++i) {
+		newScan.walls[i] = newWallsVector[i];
+	}
 
 	output.icpLoopCount = icpLoopCounter;
 	return output;

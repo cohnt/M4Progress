@@ -35,6 +35,9 @@ struct svdOutput {
 };
 struct optimizationOutput {
 	int icpLoopCount;
+	std::vector<double> avgD;
+	std::vector<double> angleHistory;
+	std::vector<std::array<double, 2>> translationHistory;
 };
 
 std::vector<std::array<double, 3>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);
