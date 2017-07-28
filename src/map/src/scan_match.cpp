@@ -30,21 +30,24 @@ std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3
 }
 
 void removeDuplicatePoints(worldState &newScan, std::vector<worldState> map) {
-	std::vector<std::array<double, 3>> knownPoints;
-	int i=map.size()-1;
-	knownPoints.reserve(1000 + BASE_SCAN_MAX_NUM_POINTS);
-	while(i >= 0 && knownPoints.size() <= 1000) {
-		std::vector<std::array<double, 3>> walls = map[i].getWalls();
-		for(int j=0; j<walls.size(); ++j) {
-			knownPoints.push_back(walls[j]);
-		}
-	}
+	int scansToSearchBackForDuplicates = 25;
+	int startIndex = map.size() - scansToSearchBackForDuplicates;
 	for(int i=0; i<newScan.walls.size(); ++i) {
-		for(int j=0; j<knownPoints.size(); ++j) {
-			if(distanceSquared(newScan.walls[i], knownPoints[j]) < 0.01*0.01) {
-				newScan.walls.erase(newScan.walls.begin() + i);
-				--i;
+		for(int j=map.size()-1; j>=startIndex; --j) {
+			if(j < 0) {
 				break;
+			}
+			else {
+				for(int k=map[j].walls.size() - 1; k>=0; --k) {
+					double d = distanceSquared(newScan.walls[i], map[j].walls[k]);
+					if(d < 0.01*0.01) {
+						map[j].walls.erase(map[j].walls.begin() + k);
+						if(map[j].walls.size() == 0) {
+							map.erase(map.begin() + j);
+						}
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -56,7 +59,7 @@ std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>
 	assert(pc2.size() > 0);
 
 	std::vector<int> pc2UsedIndexes;
-	const int numPointsToMatch = static_cast<int>(ceil(0.05 * static_cast<double>(pc2.size())));
+	const int numPointsToMatch = static_cast<int>(ceil(0.1 * static_cast<double>(pc2.size())));
 	//std::cout << "Matching " << numPointsToMatch << " points..." << std::endl;
 	pc2UsedIndexes.reserve(numPointsToMatch);
 
@@ -338,7 +341,7 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 		newScan.walls[i] = newWallsVector[i];
 	}
 
-	//removeDuplicatePoints(newScan, map);
+	removeDuplicatePoints(newScan, map);
 
 	output.icpLoopCount = totalLoopCount;
 	output.netAngleError = scanAngleError;

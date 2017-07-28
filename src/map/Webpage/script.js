@@ -33,10 +33,10 @@ var minICPComparePoints = 3000; //The minimum number of points ICP must use to c
 var maxICPLoopCount = 250; //The maximum number of times ICP can run.
 var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
-var icpNoMovementCounterThreshold = 8; //ICP must lead to no movement at least this many times for it to finish.
+var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
 var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
 var goodCorrespondenceThresholdSquared = Math.pow(0, 2);
-var maximumPointMatchDistance = 2;
+var maximumPointMatchDistance = 5;
 var percentChanceToMatchPoints = 10;
 
 //Global variables.
@@ -106,7 +106,6 @@ function pose(rawPose) {
 			--i;
 		}
 		else {
-			this.walls[i].push(1);
 			//this.walls[i] = numeric.dot(makeRotationMatrix(this.angle), this.walls[i]);
 			//this.walls[i] = numeric.dot(makeTranslationMatrix(this.position[0], this.position[1]), this.walls[i]);
 		}
@@ -205,6 +204,7 @@ function startServerConnection() {
 	ws.onmessage = function(event) { //When a message is received...
 		var rawMessage = JSON.parse(event.data); //Update the last data message.
 		if(rawMessage.type == "SENDDATA") {
+			console.log("Received data!");
 			for(var i=0; i<rawMessage.data.length; ++i) {
 				poses.unshift(new pose(rawMessage.data[i]));
 			}

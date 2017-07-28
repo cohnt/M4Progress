@@ -158,7 +158,22 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 				//std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
 
-				std::cout << "Success? " << (output.success ? "Yes!" : "No!") << std::endl;
+				if(output.success) {
+					std::cout << "Success? \t\t\t\t\t  __    __   ____    ____ " << std::endl;
+					std::cout << "         \t\t\t\t\t  \\ \\  / /  | ___|  /  __|" << std::endl;
+					std::cout << "         \t\t\t\t\t   \\ \\/ /   | |_    | |__ " << std::endl;
+					std::cout << "         \t\t\t\t\t    |  |    |  _|   \\__  \\" << std::endl;
+					std::cout << "         \t\t\t\t\t    |  |    | |__    __| |"<< std::endl;
+					std::cout << "         \t\t\t\t\t    |__|    |____|  |____/" << std::endl;
+				}
+				else {
+					std::cout << "Success? \t\t\t\t\t   __    _    _____ " << std::endl;
+					std::cout << "         \t\t\t\t\t  |  \\  | |  /  _  \\" << std::endl;
+					std::cout << "         \t\t\t\t\t  |   \\ | |  | / \\ |" << std::endl;
+					std::cout << "         \t\t\t\t\t  | |\\ \\| |  | | | |" << std::endl;
+					std::cout << "         \t\t\t\t\t  | | \\   |  | \\_/ |" << std::endl;
+					std::cout << "         \t\t\t\t\t  |_|  \\__|  \\_____/" << std::endl;
+				}
 
 				if(output.success) {
 					slamTransform = product(slamTransform, output.currentSLAM);
