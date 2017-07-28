@@ -63,6 +63,7 @@ void worldState::newOdometry(geometry_msgs::Pose odom, std::array<std::array<dou
 	double x = odometry.position.x;
 	double y = odometry.position.y;
 	double z = odometry.position.z;
+	z = 1.0;
 	odometry.position.x = (slam[0][0]*x) + (slam[0][1]*y) + (slam[0][2]*z);
 	odometry.position.y = (slam[1][0]*x) + (slam[1][1]*y) + (slam[1][2]*z);
 	odometry.position.z = (slam[2][0]*x) + (slam[2][1]*y) + (slam[2][2]*z);

@@ -8,6 +8,7 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <math.h>
+#include <algorithm>
 #include <mutex>
 
 #include "world_state.h"
@@ -15,6 +16,7 @@
 #include "json.hpp"
 
 #define NUM_STATES_TO_RESERVE 4096
+#define STATES_CACHE_SIZE 64
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -31,6 +33,7 @@ bool serverStarted = false; //Has the server started yet?
 geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
 std::vector<worldState> states;
+std::vector<worldState> unsentStates;
 worldState lastWorldState; //The most recent world state.
 bool newDataForClient;
 bool justGotConfig = false;
@@ -61,6 +64,7 @@ bool doSave(worldState state) {
 	}
 	else if(justGotConfig) {
 		states.resize(0);
+		unsentStates.resize(0);
 		justGotConfig = false;
 		return true;
 	}
@@ -80,12 +84,14 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 		json message = json::parse(incomingMsg);
 		if(message["type"] == "REQUESTDATA") {
 			if(newDataForClient) {
-				newDataForClient = false;
-				char *outgoingMessage = states[states.size()-1].makeJSONString();
+				assert(unsentStates.size() > 0);
+				char *outgoingMessage = unsentStates[0].makeJSONString();
 				std::cout << "\t\t\t\t\t\t\t RECEIVED: " << incomingMsg << std::endl;
 				std::cout << "\t\t\t\t\t\t\t SENT: " << "(data message)" << std::endl;
 				s->send(hdl, outgoingMessage, msg->get_opcode());
 				free(outgoingMessage);
+				unsentStates.erase(unsentStates.begin());
+				newDataForClient = unsentStates.size() > 0;
 			}
 			else {
 				json outgoingMessage = {
@@ -178,11 +184,13 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 				if(output.success) {
 					slamTransform = product(slamTransform, output.currentSLAM);
 					states.push_back(lastWorldState);
+					unsentStates.push_back(lastWorldState);
 					newDataForClient = true;
 				}
 			}
 			else {
 				states.push_back(lastWorldState);
+				unsentStates.push_back(lastWorldState);
 				newDataForClient = true;
 			}
 		}
@@ -192,6 +200,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 int main(int argc, char **argv) {
 	states.reserve(NUM_STATES_TO_RESERVE);
+	unsentStates.reserve(STATES_CACHE_SIZE);
 
 	server echoServer;
 	echoServer.set_access_channels(websocketpp::log::alevel::all);

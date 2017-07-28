@@ -5,7 +5,7 @@ var yawIndex = 0; //This is the index in the returned Euler angle array (from qu
 var lidarForwardDistance = 0.23; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
                                 //Remember to change this value in the C++ code as well!
 var minRotationRecordChange = Math.PI / 1800; //How much the robot has to rotate to trigger the pose being saved.
-var minPositionRecordChange = Math.pow(0.001, 2); //How much the robot has to move to trigger the pose being saved.
+var minPositionRecordChange = Math.pow(0.01, 2); //How much the robot has to move to trigger the pose being saved.
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.25, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.
@@ -29,22 +29,22 @@ var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milli
 var printMatrixMinColWidth = 20;
 var lidarMinDistanceSquared = 0.1;
 var maxNumSavedPoses = Infinity;
-var minICPComparePoints = 3000; //The minimum number of points ICP must use to compare.
+var minICPComparePoints = 1500; //The minimum number of points ICP must use to compare.
 var maxICPLoopCount = 250; //The maximum number of times ICP can run.
 var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
 var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
 var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
-var goodCorrespondenceThresholdSquared = Math.pow(0, 2);
+var goodCorrespondenceThresholdSquared = Math.pow(0.01, 2);
 var maximumPointMatchDistance = 5;
-var percentChanceToMatchPoints = 10;
+var percentChanceToMatchPoints = 20;
 
 //Global variables.
 var canvas; //A global variable 
 var context;
 var ws;
 var page = {}; //An object which holds all grabbed html elements from the page in one nice, central location.
-var zoom = 128; //As the path and information get bigger, it's useful to zoom out.
+var zoom = 64; //As the path and information get bigger, it's useful to zoom out.
                 //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
                 //In other words, the units are pixels per meter.
 var lastDataMessage;

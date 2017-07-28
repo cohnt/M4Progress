@@ -59,7 +59,7 @@ std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>
 	assert(pc2.size() > 0);
 
 	std::vector<int> pc2UsedIndexes;
-	const int numPointsToMatch = static_cast<int>(ceil(0.1 * static_cast<double>(pc2.size())));
+	const int numPointsToMatch = static_cast<int>(ceil((cfg.percentChanceToMatchPoints/100.0) * static_cast<double>(pc2.size())));
 	//std::cout << "Matching " << numPointsToMatch << " points..." << std::endl;
 	pc2UsedIndexes.reserve(numPointsToMatch);
 
@@ -92,7 +92,6 @@ std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>
 				break;
 			}
 		}
-		assert(j == -1);
 		std::array<double, 3> pair = {index, smallestSquaredDistanceIndex, smallestSquaredDistance};
 		pairIndexes.push_back(pair);
 	}
