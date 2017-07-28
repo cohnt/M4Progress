@@ -29,7 +29,7 @@ var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milli
 var printMatrixMinColWidth = 20;
 var lidarMinDistanceSquared = 0.1;
 var maxNumSavedPoses = 50;
-var minICPComparePoints = 1000; //The minimum number of points ICP must use to compare.
+var minICPComparePoints = 3000; //The minimum number of points ICP must use to compare.
 var maxICPLoopCount = 250; //The maximum number of times ICP can run.
 var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
@@ -47,8 +47,6 @@ var page = {}; //An object which holds all grabbed html elements from the page i
 var zoom = 128; //As the path and information get bigger, it's useful to zoom out.
                 //If zoom is 1, then 1px = 1m. If zoom is 100, then 1px = 1cm.
                 //In other words, the units are pixels per meter.
-var cylonMode = false;
-var cylonModeStartTime;
 var lastDataMessage;
 var firstTransmission = true;
 var keys = {};
