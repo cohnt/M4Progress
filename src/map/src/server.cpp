@@ -34,6 +34,11 @@ std::vector<worldState> states;
 worldState lastWorldState; //The most recent world state.
 bool newDataForClient;
 bool justGotConfig = false;
+std::array<std::array<double, 3>, 3> slamTransform = {
+	std::array<double, 3>{1, 0, 0},
+	std::array<double, 3>{0, 1, 0},
+	std::array<double, 3>{0, 0, 1}
+};
 
 std::mutex mutex;
 
@@ -130,7 +135,7 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		mutex.lock();
 		needOdom = true;
 		lastBaseScan = *msg;
-		lastWorldState.newOdometry(lastOdomPose);
+		lastWorldState.newOdometry(lastOdomPose, slamTransform);
 		lastWorldState.newBaseScan(lastBaseScan);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {

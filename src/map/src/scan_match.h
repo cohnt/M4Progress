@@ -40,6 +40,7 @@ struct optimizationOutput {
 	std::vector<std::array<double, 2>> translationHistory;
 	double netAngleError;
 	std::array<double, 2> netPositionError;
+	std::array<std::array<double, 3>, 3> currentSLAM;
 };
 
 std::vector<std::array<double, 3>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);

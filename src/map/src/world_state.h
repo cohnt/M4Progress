@@ -22,7 +22,7 @@ class worldState {
 		worldState();
 		worldState(geometry_msgs::Pose odom, sensor_msgs::LaserScan base, double lidarDistance);
 
-		void newOdometry(geometry_msgs::Pose odom);
+		void newOdometry(geometry_msgs::Pose odom, std::array<std::array<double, 3>, 3> slam);
 		double newBaseScan(sensor_msgs::LaserScan base);
 		void setLidarForwardDistance(double d);
 		geometry_msgs::Pose getOdometry();

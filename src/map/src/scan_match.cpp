@@ -301,5 +301,6 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 	output.icpLoopCount = icpLoopCounter;
 	output.netAngleError = scanAngleError;
 	output.netPositionError = scanPositionError;
+	output.currentSLAM = scanTransformError;
 	return output;
 }

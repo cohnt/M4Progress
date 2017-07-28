@@ -58,9 +58,16 @@ double worldState::convertToWorldFrame() {
 	}
 	return theta;
 }
-void worldState::newOdometry(geometry_msgs::Pose odom) {
+void worldState::newOdometry(geometry_msgs::Pose odom, std::array<std::array<double, 3>, 3> slam) {
 	odometry = odom;
+	double x = odometry.position.x;
+	double y = odometry.position.y;
+	double z = odometry.position.z;
+	odometry.position.x = (slam[0][0]*x) + (slam[0][1]*y) + (slam[0][2]*z);
+	odometry.position.y = (slam[1][0]*x) + (slam[1][1]*y) + (slam[1][2]*z);
+	odometry.position.z = (slam[2][0]*x) + (slam[2][1]*y) + (slam[2][2]*z);
 	theta = atan2(2*((odometry.orientation.x*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.w)), 1-(2*((odometry.orientation.y*odometry.orientation.y) + (odometry.orientation.z*odometry.orientation.z))));
+	theta += atan2(slam[1][0], slam[0][0]);
 }
 double worldState::newBaseScan(sensor_msgs::LaserScan base) {
 	baseScan = base;
