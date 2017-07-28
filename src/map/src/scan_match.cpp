@@ -48,6 +48,9 @@ std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>
 				smallestSquaredDistance = d;
 				smallestSquaredDistanceIndex = j;
 			}
+			if(d < cfg.goodCorrespondenceThresholdSquared) {
+				break;
+			}
 		}
 		assert(j == -1);
 		std::array<double, 3> pair = {index, smallestSquaredDistanceIndex, smallestSquaredDistance};
@@ -282,12 +285,12 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 			else {
 				icpLoopCounter = 0;
 			}
-//
-//			/*scanAngleError += angle;
-//			scanPositionError[0] += translationVector[0];
-//			scanPositionError[1] += translationVector[1];
-//			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
-//			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);*/
+
+			scanAngleError += angle;
+			scanPositionError[0] += translationVector[0];
+			scanPositionError[1] += translationVector[1];
+			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
+			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);
 		}
 	}
 
@@ -296,5 +299,7 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 	}
 
 	output.icpLoopCount = icpLoopCounter;
+	output.netAngleError = scanAngleError;
+	output.netPositionError = scanPositionError;
 	return output;
 }

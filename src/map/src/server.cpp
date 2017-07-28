@@ -146,6 +146,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 				for(int i=0; i<output.angleHistory.size(); ++i) {
 					std::cout << "Angle: " << output.angleHistory[i] << "\t Translation:" << output.translationHistory[i][0] << ", " << output.translationHistory[i][1] << std::endl;
 				}
+				std::cout << "Net angle error: " << output.netAngleError << std::endl;
+				std::cout << "Net position error: " << output.netPositionError[0] << ", " << output.netPositionError[1] << std::endl;
 
 				std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
 			}
