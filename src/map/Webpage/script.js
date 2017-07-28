@@ -4,8 +4,8 @@ var robotMarkerArrowAngle = Math.PI/6; //There's an arrow on the circle, showing
 var yawIndex = 0; //This is the index in the returned Euler angle array (from quaternionToEuler) where the yaw is indexed.
 var lidarForwardDistance = 0.23; //This is the distance between the robot's odometry center and the lidar module in the front, in meters. This is approximate.
                                 //Remember to change this value in the C++ code as well!
-var minRotationRecordChange = Math.PI / 1800; //How much the robot has to rotate to trigger the pose being saved.
-var minPositionRecordChange = Math.pow(0.001, 2); //How much the robot has to move to trigger the pose being saved.
+var minRotationRecordChange = Math.PI / 180; //How much the robot has to rotate to trigger the pose being saved.
+var minPositionRecordChange = Math.pow(0.01, 2); //How much the robot has to move to trigger the pose being saved.
 var wallsFillMinDistanceSquaredFromCenter = Math.pow(0.25, 2); //This is how far away a point must be from the center of the lidar module to be considered legit.
 var maxWallRenderConnectedDistance = Math.pow(0.1, 2); //This is how close points must be together to be considered a connected wall.
 var epsilonFloat = 0.001; //The epsilon value used for floating-point values from the C++ backend.

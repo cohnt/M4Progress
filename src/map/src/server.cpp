@@ -142,21 +142,21 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 			if(states.size() != 0) {
 				optimizationOutput output = optimizeScan(lastWorldState, states, config);
 				std::cout << "ICP Loop Count: " << output.icpLoopCount << std::endl;
-				std::cout << "ICP Average Distances Traveled: ";
+				//std::cout << "ICP Average Distances Traveled: ";
 				//for(int i=0; i<output.avgD.size(); ++i) {
 				//	std::cout << output.avgD[i];
 				//}
-				std::cout << std::endl;
-				std::cout << "ICP Transform History: " << std::endl;
+				//std::cout << std::endl;
+				//std::cout << "ICP Transform History: " << std::endl;
 				//for(int i=0; i<output.angleHistory.size(); ++i) {
 				//	std::cout << "Angle: " << output.angleHistory[i] << "\t Translation:" << output.translationHistory[i][0] << ", " << output.translationHistory[i][1] << std::endl;
 				//}
-				std::cout << "Net angle error: " << output.netAngleError << std::endl;
-				std::cout << "Net position error: " << output.netPositionError[0] << ", " << output.netPositionError[1] << std::endl;
+				//std::cout << "Net angle error: " << output.netAngleError << std::endl;
+				//std::cout << "Net position error: " << output.netPositionError[0] << ", " << output.netPositionError[1] << std::endl;
 				std::cout << "Total angle error: " << atan2(slamTransform[1][0], slamTransform[0][0]) << std::endl;
 				std::cout << "Total position error: " << slamTransform[0][2] << ", " << slamTransform[1][2] << std::endl;
 
-				std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+				//std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
 
 				slamTransform = product(slamTransform, output.currentSLAM);
 			}

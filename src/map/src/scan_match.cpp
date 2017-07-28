@@ -37,7 +37,7 @@ std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>
 
 	std::vector<int> pc2UsedIndexes;
 	const int numPointsToMatch = static_cast<int>(ceil(0.05 * static_cast<double>(pc2.size())));
-	std::cout << "Matching " << numPointsToMatch << " points..." << std::endl;
+	//std::cout << "Matching " << numPointsToMatch << " points..." << std::endl;
 	pc2UsedIndexes.reserve(numPointsToMatch);
 
 	while(pc2UsedIndexes.size() < numPointsToMatch) {
