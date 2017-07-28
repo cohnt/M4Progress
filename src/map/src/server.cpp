@@ -135,14 +135,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
 		if(doSave(lastWorldState)) {
 			if(states.size() != 0) {
-				std::vector<std::array<double, 3>> output = optimizeScan(lastWorldState, states, config);
-				std::cout << "Size:" << output.size() << std::endl;
-				int i=0;
-				while(i < output.size()-1) {
-					std::cout << i << "\t\t" << output[i][0] << ", " << output[i][1] << ", " << output[i][2] << "\t\t\t" <<
-					          output[i+1][0] << ", " << output[i+1][1] << ", " << output[i+1][2] << "\t\t\t" << output[i+2][0] << std::endl;
-					i += 3;
-				}
+				optimizationOutput output = optimizeScan(lastWorldState, states, config);
+				std::cout << "ICP Loop Count: " << output.icpLoopCount << std::endl;
 				std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
 			}
 			states.push_back(lastWorldState);
