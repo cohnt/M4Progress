@@ -2,6 +2,7 @@
 #include <math.h>
 #include <limits>
 #include <eigen3/Eigen/Dense>
+#include <assert.h>
 
 double distanceSquared(std::array<double, 3> a, std::array<double, 3> b) {
 	double sum = 0;
@@ -11,33 +12,49 @@ double distanceSquared(std::array<double, 3> a, std::array<double, 3> b) {
 	return sum;
 }
 
-std::vector<std::array<int, 2>> matchPoints(std::vector<std::array<double, 3>> &pc1, std::vector<std::array<double, 3>> &pc2, icpConfig cfg) {
-	std::vector<std::array<int, 2>> pairIndexes;
+std::vector<std::array<double, 3>> matchPoints(std::vector<std::array<double, 3>> &pc1, std::vector<std::array<double, 3>> &pc2, icpConfig cfg) {
+	std::vector<std::array<double, 3>> pairIndexes;
 
-	for(int i=0; i<pc2.size(); ++i) {
-		if(pc2[i][0] == pc2[i][0] && pc2[i][1] == pc2[i][1] && pc2[i][2] == pc2[i][2]) {
-			if(rand() % 100 < 10) {
-				double smallestSquaredDistance = FLT_MAX;
-				int smallestSquaredDistanceIndex;
-				for(int j=pc1.size()-1; j>=0; --j) {
-					if(pc1[i][0] == pc1[i][0] && pc1[i][1] == pc1[i][1] && pc1[i][2] == pc1[i][2]) {
-						double d = distanceSquared(pc2[i], pc1[j]);
-						if(d < smallestSquaredDistance) {
-							smallestSquaredDistance = d;
-							smallestSquaredDistanceIndex = j;
-						}
-						if(d < cfg.goodCorrespondenceThresholdSquared) {
-							break;
-						}
-					}
-				}
-				if(smallestSquaredDistance < cfg.maximumPointMatchDistance) {
-					std::array<int, 2> pair = {i, smallestSquaredDistanceIndex};
-					pairIndexes.push_back(pair);
-				}
+	assert(pc1.size() > 0);
+	assert(pc2.size() > 0);
+
+	std::vector<int> pc2UsedIndexes;
+	const int numPointsToMatch = static_cast<int>(ceil(0.1 * static_cast<double>(pc2.size())));
+	assert(numPointsToMatch > 25);
+	pc2UsedIndexes.reserve(numPointsToMatch);
+
+	while(pc2UsedIndexes.size() < numPointsToMatch) {
+		int index = rand() % pc2.size();
+		bool use = true;
+		for(int i=0; i<pc2UsedIndexes.size(); ++i) {
+			if(pc2UsedIndexes[i] == index) {
+				use = false;
+				break;
 			}
 		}
+		if(use) {
+			pc2UsedIndexes.push_back(index);
+		}
 	}
+
+	for(int i=0; i<pc2UsedIndexes.size(); ++i) {
+		const int index = pc2UsedIndexes[i];
+		double smallestSquaredDistance = FLT_MAX;
+		int smallestSquaredDistanceIndex;
+		int j;
+		for(j=pc1.size()-1; j>=0; --j) {
+			double d = distanceSquared(pc2[index], pc1[j]);
+			if(d < smallestSquaredDistance) {
+				smallestSquaredDistance = d;
+				smallestSquaredDistanceIndex = j;
+			}
+		}
+		assert(j == -1);
+		std::array<double, 3> pair = {index, smallestSquaredDistanceIndex, smallestSquaredDistance};
+		pairIndexes.push_back(pair);
+	}
+
+	assert(pairIndexes.size() > 0);
 
 	return pairIndexes;
 }
@@ -90,85 +107,85 @@ void transpose(std::array<std::array<double, 2>, 2> &m) {
 	}
 }
 icpOutput runICP(std::vector<std::array<double, 3>> set1, std::vector<std::array<double, 3>> set2) {
-	std::vector<std::array<double, 2>> pi;
-	std::vector<std::array<double, 2>> pi1;
-
-	for(int i=0; i<set2.size(); ++i) {
-		pi.push_back(std::array<double, 2>{set1[i][0], set1[i][1]});
-		pi1.push_back(std::array<double, 2>{set2[i][0], set2[i][1]});
-	}
-
-	std::array<double, 2> p = {0, 0};
-	std::array<double, 2> p1 = {0, 0};
-
-	for(int i=0; i<pi.size(); ++i) {
-		p[0] += pi[i][0];
-		p[1] += pi[i][1];
-		p1[0] += pi1[i][0];
-		p1[1] += pi1[i][1];
-	}
-	p[0] = p[0]/pi.size();
-	p[1] = p[1]/pi.size();
-	p1[0] = p1[0]/pi1.size();
-	p1[1] = p1[1]/pi1.size();
-
-	std::vector<std::array<double, 2>> qi;
-	std::vector<std::array<double, 2>> qi1;
-
-	for(int i=0; i<pi.size(); ++i) {
-		qi.push_back(std::array<double, 2>{
-			pi[i][0]-p[0],
-			pi[i][1]-p[1]
-		});
-		qi1.push_back(std::array<double, 2>{
-			pi1[i][0]-p1[0],
-			pi1[i][1]-p1[1]
-		});
-	}
-
-	std::array<std::array<double, 2>, 2> H = {
-		std::array<double, 2>{0, 0},
-		std::array<double, 2>{0, 0}
-	};
-	for(int i=0; i<qi.size(); ++i){
-		H[0][0] += qi1[i][0]*qi[i][0];
-		H[0][1] += qi1[i][1]*qi[i][0];
-		H[1][0] += qi1[i][0]*qi[i][1];
-		H[1][1] += qi1[i][1]*qi[i][1];
-	}
-
-	svdOutput out = SVD(H);
-
-	std::array<std::array<double, 2>, 2> U = out.U;
-	std::array<std::array<double, 2>, 2> S = out.S;
-	std::array<std::array<double, 2>, 2> V = out.V;
-	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
-	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
-
-	std::array<std::array<double, 3>, 3> rotationMatrix = { //V*UT
-		std::array<double, 3>{(V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1]), 0},
-		std::array<double, 3>{(V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1]), 0},
-		std::array<double, 3>{0, 0, 1}
-	};
-	std::array<double, 2> translationVector = {
-		p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])),
-		p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1]))
-	};
-
-	for(int i=0; i<2; ++i) {
-		for(int j=0; j<2; ++j) {
-			if(rotationMatrix[i][j] > 1) {
-				rotationMatrix[i][j] = 1;
-			}
-			else if(rotationMatrix[i][j] < -1) {
-				rotationMatrix[i][j] = -1;
-			}
-		}
-	}
-
-	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1, H, U, S, V, set1.size(), set2.size()};
+//	std::vector<std::array<double, 2>> pi;
+//	std::vector<std::array<double, 2>> pi1;
+//
+//	for(int i=0; i<set2.size(); ++i) {
+//		pi.push_back(std::array<double, 2>{set1[i][0], set1[i][1]});
+//		pi1.push_back(std::array<double, 2>{set2[i][0], set2[i][1]});
+//	}
+//
+//	std::array<double, 2> p = {0, 0};
+//	std::array<double, 2> p1 = {0, 0};
+//
+//	for(int i=0; i<pi.size(); ++i) {
+//		p[0] += pi[i][0];
+//		p[1] += pi[i][1];
+//		p1[0] += pi1[i][0];
+//		p1[1] += pi1[i][1];
+//	}
+//	p[0] = p[0]/pi.size();
+//	p[1] = p[1]/pi.size();
+//	p1[0] = p1[0]/pi1.size();
+//	p1[1] = p1[1]/pi1.size();
+//
+//	std::vector<std::array<double, 2>> qi;
+//	std::vector<std::array<double, 2>> qi1;
+//
+//	for(int i=0; i<pi.size(); ++i) {
+//		qi.push_back(std::array<double, 2>{
+//			pi[i][0]-p[0],
+//			pi[i][1]-p[1]
+//		});
+//		qi1.push_back(std::array<double, 2>{
+//			pi1[i][0]-p1[0],
+//			pi1[i][1]-p1[1]
+//		});
+//	}
+//
+//	std::array<std::array<double, 2>, 2> H = {
+//		std::array<double, 2>{0, 0},
+//		std::array<double, 2>{0, 0}
+//	};
+//	for(int i=0; i<qi.size(); ++i){
+//		H[0][0] += qi1[i][0]*qi[i][0];
+//		H[0][1] += qi1[i][1]*qi[i][0];
+//		H[1][0] += qi1[i][0]*qi[i][1];
+//		H[1][1] += qi1[i][1]*qi[i][1];
+//	}
+//
+//	svdOutput out = SVD(H);
+//
+//	std::array<std::array<double, 2>, 2> U = out.U;
+//	std::array<std::array<double, 2>, 2> S = out.S;
+//	std::array<std::array<double, 2>, 2> V = out.V;
+//	std::array<std::array<double, 2>, 2> UT = U; transpose(UT);
+//	std::array<std::array<double, 2>, 2> VT = U; transpose(VT);
+//
+//	std::array<std::array<double, 3>, 3> rotationMatrix = { //V*UT
+//		std::array<double, 3>{(V[0][0]*UT[0][0])+(V[0][1]*UT[1][0]), (V[0][0]*UT[0][1])+(V[0][1]*UT[1][1]), 0},
+//		std::array<double, 3>{(V[1][0]*UT[0][0])+(V[1][1]*UT[1][0]), (V[1][0]*UT[0][1])+(V[1][1]*UT[1][1]), 0},
+//		std::array<double, 3>{0, 0, 1}
+//	};
+//	std::array<double, 2> translationVector = {
+//		p1[0]-((rotationMatrix[0][0]*p[0])+(rotationMatrix[0][1]*p[1])),
+//		p1[1]-((rotationMatrix[1][0]*p[0])+(rotationMatrix[1][1]*p[1]))
+//	};
+//
+//	for(int i=0; i<2; ++i) {
+//		for(int j=0; j<2; ++j) {
+//			if(rotationMatrix[i][j] > 1) {
+//				rotationMatrix[i][j] = 1;
+//			}
+//			else if(rotationMatrix[i][j] < -1) {
+//				rotationMatrix[i][j] = -1;
+//			}
+//		}
+//	}
+//
+//	return (icpOutput){rotationMatrix, translationVector, atan2(rotationMatrix[1][0], rotationMatrix[0][0]), p, p1, H, U, S, V, set1.size(), set2.size()};
 }
-std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
+std::vector<std::array<double, 3>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	std::vector<std::array<double, 3>> knownPoints;
 	bool finished = false;
 	int totalLoopCount;
@@ -189,12 +206,13 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 	knownPoints.reserve(cfg.minICPComparePoints + BASE_SCAN_MAX_NUM_POINTS);
 	while(i >= 0 && knownPoints.size() <= cfg.minICPComparePoints) {
 		std::vector<std::array<double, 3>> walls = map[i].getWalls();
-		for(int j=0; j<walls[j].size(); ++j) {
+		for(int j=0; j<walls.size(); ++j) {
 			knownPoints.push_back(walls[j]);
 		}
 	}
 
-	std::vector<std::vector<std::array<double, 3>>> returnData;
+	std::vector<std::array<double, 3>> retVal;
+	retVal.reserve(BASE_SCAN_MAX_NUM_POINTS);
 
 	totalLoopCount = 0;
 	while(!finished) {
@@ -208,187 +226,59 @@ std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan
 			iterationTotalSquaredDistance = 0;
 			std::vector<std::array<double, 3>> oldPoints;
 			std::vector<std::array<double, 3>> newPoints;
-			std::vector<std::array<int, 2>> pointPairsIndexes;
+			std::vector<std::array<double, 3>> pointPairsIndexes;
 			pointPairsIndexes = matchPoints(knownPoints, newWallsVector, cfg);
+			assert(pointPairsIndexes.size() > 0);
 			oldPoints.reserve(newWallsVector.size());
 			newPoints.reserve(newWallsVector.size());
 			for(int i=0; i<pointPairsIndexes.size(); ++i) {
-				oldPoints.push_back(knownPoints[pointPairsIndexes[i][1]]);
-				newPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]);
-			}
-			icpOutput results = runICP(newPoints, newPoints);
-			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
-			std::array<double, 2> translationVector = results.translation;
-			double angle = results.theta;
-
-			std::vector<std::array<double, 3>> b0 {
-				std::array<double, 3> {
-					translationVector[0],
-					translationVector[1],
-					rotationMatrix[0][0]
-				}
-			};
-			std::vector<std::array<double, 3>> b1 {
-				std::array<double, 3> {
-					rotationMatrix[0][1],
-					rotationMatrix[1][0],
-					rotationMatrix[1][1]
-				}
-			};
-			std::vector<std::array<double, 3>> b2 {
-				std::array<double, 3> {
-					results.H[0][0],
-					results.H[0][1],
-					results.H[1][0]
-				}
-			};
-			std::vector<std::array<double, 3>> b3 {
-				std::array<double, 3> {
-					results.H[1][1],
-					1,
-					1
-				}
-			};
-			std::vector<std::array<double, 3>> b4 {
-				std::array<double, 3> {
-					results.U[0][0],
-					results.U[0][1],
-					results.U[1][0]
-				}
-			};
-			std::vector<std::array<double, 3>> b5 {
-				std::array<double, 3> {
-					results.U[1][1],
-					1,
-					1
-				}
-			};
-			std::vector<std::array<double, 3>> b6 {
-				std::array<double, 3> {
-					results.S[0][0],
-					results.S[0][1],
-					results.S[1][0]
-				}
-			};
-			std::vector<std::array<double, 3>> b7 {
-				std::array<double, 3> {
-					results.S[1][1],
-					1,
-					1
-				}
-			};
-			std::vector<std::array<double, 3>> b8 {
-				std::array<double, 3> {
-					results.V[0][0],
-					results.V[0][1],
-					results.V[1][0]
-				}
-			};
-			std::vector<std::array<double, 3>> b9 {
-				std::array<double, 3> {
-					results.V[1][1],
-					1,
-					1
-				}
-			};
-			std::vector<std::array<double, 3>> b10 {
-				std::array<double, 3> {
-					results.a[0],
-					results.a[1],
-					10
-				}
-			};
-			std::vector<std::array<double, 3>> b11 {
-				std::array<double, 3> {
-					results.a1[0],
-					results.a1[1],
-					10
-				}
-			};
-			std::vector<std::array<double, 3>> b12 {
-				std::array<double, 3> {
-					results.piSize,
-					results.pi1Size,
-					20
-				}
-			};
-			std::vector<std::array<double, 3>> b13 {
-				std::array<double, 3> {
-					knownPoints.size(),
-					newWallsVector.size(),
-					20
-				}
-			};
-
-			//returnData.push_back(newWallsVector);
-			for(int i=0; i<newWallsVector.size(); ++i) {
-				if(i >= oldScanPoints.size()) {
-					oldScanPoints.push_back(newWallsVector[i]);
-				}
-				else {
-					oldScanPoints[i] = newWallsVector[i];
-				}
-				double x = newWallsVector[i][0];
-				double y = newWallsVector[i][1];
-				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*x)+(rotationMatrix[0][1]*y));
-				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*x)+(rotationMatrix[1][1]*y));
-				double d2 = distanceSquared(oldScanPoints[i], newWallsVector[i]);
-				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
-			}
-			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
-			std::vector<std::array<double, 3>> b14 {
-				std::array<double, 3> {
-					pointPairsIndexes.size(),
-					iterationAverageSquaredDistance,
-					20
-				}
-			};
-			//returnData.push_back(newWallsVector);
-			//returnData.push_back(b0);
-			//returnData.push_back(b1);
-			returnData.push_back(b2);
-			returnData.push_back(b3);
-			//returnData.push_back(b4);
-			//returnData.push_back(b5);
-			//returnData.push_back(b6);
-			//returnData.push_back(b7);
-			//returnData.push_back(b8);
-			//returnData.push_back(b9);
-			//returnData.push_back(b10);
-			//returnData.push_back(b11);
-			//returnData.push_back(b12);
-			//returnData.push_back(b13);
-			//returnData.push_back(b14);
-
-			if(iterationAverageSquaredDistance == 0) {
-				return returnData;
+				newPoints.push_back(newWallsVector[pointPairsIndexes[i][0]]); retVal.push_back(newWallsVector[pointPairsIndexes[i][0]]);
+				oldPoints.push_back(knownPoints[pointPairsIndexes[i][1]]);    retVal.push_back(knownPoints[pointPairsIndexes[i][1]]);
+				                                                              retVal.push_back(std::array<double, 3>{pointPairsIndexes[i][2], 0, 0});
 			}
 
-			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
-				++icpLoopCounter;
-				if(icpLoopCounter >= cfg.icpNoMovementCounterThreshold) {
-					finished = true;
-				}
-			}
-			else {
-				icpLoopCounter = 0;
-			}
+			assert(retVal.size() > 0);
 
-			/*scanAngleError += angle;
-			scanPositionError[0] += translationVector[0];
-			scanPositionError[1] += translationVector[1];
-			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
-			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);*/
+			return retVal;
+//			icpOutput results = runICP(newPoints, newPoints);
+//			std::array<std::array<double, 3>, 3> rotationMatrix = results.rotationMatrix;
+//			std::array<double, 2> translationVector = results.translation;
+//			double angle = results.theta;
+//			for(int i=0; i<newWallsVector.size(); ++i) {
+//				if(i >= oldScanPoints.size()) {
+//					oldScanPoints.push_back(newWallsVector[i]);
+//				}
+//				else {
+//					oldScanPoints[i] = newWallsVector[i];
+//				}
+//				double x = newWallsVector[i][0];
+//				double y = newWallsVector[i][1];
+//				newWallsVector[i][0] = translationVector[0] + ((rotationMatrix[0][0]*x)+(rotationMatrix[0][1]*y));
+//				newWallsVector[i][1] = translationVector[1] + ((rotationMatrix[1][0]*x)+(rotationMatrix[1][1]*y));
+//				double d2 = distanceSquared(oldScanPoints[i], newWallsVector[i]);
+//				iterationTotalSquaredDistance += distanceSquared(oldScanPoints[i], newWallsVector[i]);
+//			}
+//			iterationAverageSquaredDistance = iterationTotalSquaredDistance / static_cast<double>(newWallsVector.size());
+//
+//			if(iterationAverageSquaredDistance < cfg.icpAverageDistanceTraveledThresholdSquared) {
+//				++icpLoopCounter;
+//				if(icpLoopCounter >= cfg.icpNoMovementCounterThreshold) {
+//					finished = true;
+//				}
+//			}
+//			else {
+//				icpLoopCounter = 0;
+//			}
+//
+//			/*scanAngleError += angle;
+//			scanPositionError[0] += translationVector[0];
+//			scanPositionError[1] += translationVector[1];
+//			scanTransformError[0][0] = (scanTransformError[0][0]*rotationMatrix[0][0])+(scanTransformError[0][1]*rotationMatrix[1][0]); scanTransformError[0][1] = (scanTransformError[0][0]*rotationMatrix[0][1])+(scanTransformError[0][1]*rotationMatrix[1][1]);
+//			scanTransformError[1][0] = (scanTransformError[1][0]*rotationMatrix[0][0])+(scanTransformError[1][1]*rotationMatrix[1][0]); scanTransformError[1][1] = (scanTransformError[1][0]*rotationMatrix[0][1])+(scanTransformError[1][1]*rotationMatrix[1][1]);*/
 		}
-		break;
 	}
-
-	for(int i=0; i<newScan.walls.size(); ++i) {
-		newScan.walls[i] = newWallsVector[i];
-	}
-
-	return returnData;
-
-	//return std::vector<std::vector<std::array<double, 3>>>();
-	//return icpLoopCounter;
+//
+//	for(int i=0; i<newScan.walls.size(); ++i) {
+//		newScan.walls[i] = newWallsVector[i];
+//	}
 }

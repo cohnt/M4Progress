@@ -133,23 +133,18 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastWorldState.newOdometry(lastOdomPose);
 		lastWorldState.newBaseScan(lastBaseScan);
 		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
-		std::cout << "doSave? " << doSave(lastWorldState) << std::endl;
 		if(doSave(lastWorldState)) {
-			//if(states.size() != 0) {
-			//	std::vector<std::vector<std::array<double, 3>>> output = optimizeScan(lastWorldState, states, config);
-			//	std::cout << "\n\n\n DOING TEH ICP:" << std::endl;
-			//	for(int i=0; i<output[0].size(); ++i) {
-			//		for(int j=0; j<output.size(); ++j) {
-			//			std::cout <<
-			//			output[j][i][0] << ", " <<
-			//			output[j][i][1] << ", " <<
-			//			output[j][i][2] << ", " <<
-			//			std::endl;
-			//		}
-			//		std::cout << std::endl;
-			//	}
-			//	std::cout << std::endl;
-			//}
+			if(states.size() != 0) {
+				std::vector<std::array<double, 3>> output = optimizeScan(lastWorldState, states, config);
+				std::cout << "Size:" << output.size() << std::endl;
+				int i=0;
+				while(i < output.size()-1) {
+					std::cout << i << "\t\t" << output[i][0] << ", " << output[i][1] << ", " << output[i][2] << "\t\t\t" <<
+					          output[i+1][0] << ", " << output[i+1][1] << ", " << output[i+1][2] << "\t\t\t" << output[i+2][0] << std::endl;
+					i += 3;
+				}
+				std::cout << std::endl << std::endl << std::endl << std::endl << std::endl;
+			}
 			states.push_back(lastWorldState);
 			newDataForClient = true;
 		}

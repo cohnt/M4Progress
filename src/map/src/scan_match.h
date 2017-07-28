@@ -34,10 +34,10 @@ struct svdOutput {
 	std::array<std::array<double, 2>, 2> V;
 };
 
-std::vector<std::vector<int>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);
+std::vector<std::array<double, 3>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);
 svdOutput SVD(std::vector<std::vector<double>> A);
 void transpose(std::vector<std::vector<double>> &m);
 icpOutput runICP(std::vector<std::vector<double>> set1, std::vector<std::vector<double>> set2);
-std::vector<std::vector<std::array<double, 3>>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
+std::vector<std::array<double, 3>> optimizeScan(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
 
 #endif
