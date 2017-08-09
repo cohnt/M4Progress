@@ -43,6 +43,8 @@ double minPoseTranslationToSave = pow(0.001, 2);
 double minPoseRotationToSave = M_PI / 1800;
 double lidarDistance = 0.23;
 
+const int rosNodeQueueSize = 1000; //How many messages are cached by each ROS node.
+
 icpConfig config;
 
 double distanceSquared(std::vector<double> a, std::vector<double> b) {
@@ -195,11 +197,17 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 }
 
 void startServer(server &wsServer) {
+	//void startServer(server &wsServer) starts and configures the WebSocket server.
+
 	std::cout << "Starting WebSocket server...\t\t\t";
-	wsServer.set_access_channels(websocketpp::log::alevel::all);
-	wsServer.clear_access_channels(websocketpp::log::alevel::frame_payload);
-	wsServer.set_reuse_addr(true);
-	wsServer.init_asio();
+	//Almost all of this code is basically copy-pasted from an example. I don't understand how most of it works. Since it does work pretty much out of the 
+	//box, I haven't taken the time to gain a deeper understanding. It's something I ought to do, but don't have the time right now. I've included by best
+	//guesses below.
+	wsServer.clear_access_channels(websocketpp::log::alevel::all);
+	wsServer.set_reuse_addr(true); //When you quit the program with control+c, the server actually stays open for a while. Eventually, it would time out, but
+	                               //until it did, you couldn't run the program again (or rather, the program wouldn't work) because the port was already being
+	                               //used by a running process. This allows the address to be reused, presumably by overruling the old process.
+	wsServer.init_asio(); //Pretty sure this line actually starts the server.
 	wsServer.set_message_handler(bind(&on_message,&wsServer,::_1,::_2));
 	wsServer.listen(9002);
 	wsServer.start_accept();
@@ -211,32 +219,33 @@ void startServer(server &wsServer) {
 	return;
 }
 void startROS(int &argc, char** &argv) {
+	//void startROS(int &argc, char** &argv) creates two ROS nodes. One listens to odometry, and one listens to base scans. It then holds until the program is killed.
+
 	std::cout << "Starting ROS node...\t\t\t";
 	ros::init(argc, argv, "drive_and_map");
-	ros::NodeHandle odomNodeHandle;
-	ros::Subscriber odomSubscriber = odomNodeHandle.subscribe("odom", 1000, odomCallback);
-	ros::NodeHandle scanNodeHandle;
-	ros::Subscriber scanSubscriber = scanNodeHandle.subscribe("base_scan", 1000, scanCallback);
+	ros::NodeHandle odomNodeHandle; //Create the odometry node.
+	ros::Subscriber odomSubscriber = odomNodeHandle.subscribe("odom", rosNodeQueueSize, odomCallback); //Subscribe the odometry node to the channel "odom".
+	ros::NodeHandle scanNodeHandle; //Create the base scan node.
+	ros::Subscriber scanSubscriber = scanNodeHandle.subscribe("base_scan", rosNodeQueueSize, scanCallback); //Subscribe the base scan node to the channel "base_scan".
 	std::cout << "Done!" << std::endl;
 
-	ros::spin();
+	ros::spin(); //This is basically the same as a while(true) loop. While ros::spin isn't designed for multithreaded programs, it's ok here
+	             //because we're only ever touching ROS in this thread. Or so I hope!
 
 	return;
 }
 
 int main(int argc, char **argv) {
+	//int main(int argc, char**argv) is the main function. All executed code is held here.
+
 	std::cout << "Starting drive_and_map.cpp" << std::endl;
 
-	server wsServer;
+	server wsServer; //Remember that server is a typedef of websocketpp::server<websocketpp::config::asio>
 	startServer(wsServer);
 	startROS(argc, argv);
 
-	while(ros::ok()) {
-		//
-	}
-
-	wsServer.stop_perpetual();
-	wsServer.stop_listening();
+	wsServer.stop_perpetual(); //Used to help reduce errors from closing the server.
+	wsServer.stop_listening(); //''
 
 	return 0;
 }
