@@ -44,7 +44,7 @@ double minPoseRotationToSave = M_PI / 1800;
 double lidarDistance = 0.23;
 
 const int rosNodeQueueSize = 1000; //How many messages are cached by each ROS node.
-
+const int wsServerPort = 9002; //The port the WebSocket server is on.
 icpConfig config;
 
 double distanceSquared(std::vector<double> a, std::vector<double> b) {
@@ -200,19 +200,20 @@ void startServer(server &wsServer) {
 	//void startServer(server &wsServer) starts and configures the WebSocket server.
 
 	std::cout << "Starting WebSocket server...\t\t\t";
-	//Almost all of this code is basically copy-pasted from an example. I don't understand how most of it works. Since it does work pretty much out of the 
+	//Almost all of this code is basically copy-pasted from an example. I don't understand how all of it works. Since it does work pretty much out of the 
 	//box, I haven't taken the time to gain a deeper understanding. It's something I ought to do, but don't have the time right now. I've included by best
 	//guesses below.
-	wsServer.clear_access_channels(websocketpp::log::alevel::all);
+	wsServer.clear_access_channels(websocketpp::log::alevel::all); //This makes sure websocketpp isn't spamming the console with stuff I don't really need.
 	wsServer.set_reuse_addr(true); //When you quit the program with control+c, the server actually stays open for a while. Eventually, it would time out, but
 	                               //until it did, you couldn't run the program again (or rather, the program wouldn't work) because the port was already being
 	                               //used by a running process. This allows the address to be reused, presumably by overruling the old process.
 	wsServer.init_asio(); //Pretty sure this line actually starts the server.
-	wsServer.set_message_handler(bind(&on_message,&wsServer,::_1,::_2));
-	wsServer.listen(9002);
-	wsServer.start_accept();
+	wsServer.set_message_handler(bind(&on_message,&wsServer,::_1,::_2)); //No idea.
+	wsServer.listen(wsServerPort); //This is the port that the server listens on.
+	wsServer.start_accept(); //I think it's at this point the server will accept connection requests.
 	std::cout << "Done!" << std::endl;
 
+	//This creates a new thread for the server, and detaches it. After detaching,the thread can run independently.
 	std::thread wsServerThread(&server::run, &wsServer);
 	wsServerThread.detach();
 
