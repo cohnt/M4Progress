@@ -8,6 +8,7 @@
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
 #include <math.h>
+#include <mutex>
 
 #include "pose.h"
 #include "scan_match.h"
@@ -193,9 +194,8 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 	}
 }
 
-void startServer() {
+void startServer(server &wsServer) {
 	std::cout << "Starting WebSocket server...\t\t\t";
-	server wsServer;
 	wsServer.set_access_channels(websocketpp::log::alevel::all);
 	wsServer.clear_access_channels(websocketpp::log::alevel::frame_payload);
 	wsServer.set_reuse_addr(true);
@@ -207,8 +207,6 @@ void startServer() {
 
 	std::thread wsServerThread(&server::run, &wsServer);
 	wsServerThread.detach();
-	const std::thread::id id = wsServerThread.get_id();
-	std::cout << "Server thread id: " << id << std::endl;
 
 	return;
 }
@@ -229,12 +227,16 @@ void startROS(int &argc, char** &argv) {
 int main(int argc, char **argv) {
 	std::cout << "Starting drive_and_map.cpp" << std::endl;
 
-	startServer();
+	server wsServer;
+	startServer(wsServer);
 	startROS(argc, argv);
 
 	while(ros::ok()) {
 		//
 	}
+
+	wsServer.stop_perpetual();
+	wsServer.stop_listening();
 
 	return 0;
 }
