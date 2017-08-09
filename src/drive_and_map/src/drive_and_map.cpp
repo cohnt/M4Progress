@@ -27,7 +27,7 @@ bool serverStarted = false; //Has the server started yet?
 geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
 std::vector<pose> poses;
-std::vector<pose> unsentStates;
+std::vector<pose> unsentPoses;
 pose lastWorldState; //The most recent world state.
 bool newDataForClient;
 bool justGotConfig = false;
@@ -54,24 +54,26 @@ double distanceSquared(std::vector<double> a, std::vector<double> b) {
 	}
 	return sum;
 }
-bool doSave(pose state) {
-	if(poses.size() == 0) {
+bool doSave(pose currentPose) {
+	//bool doSave(pose currentPose) determines whether or not a pose should be processed and saved.
+
+	if(poses.size() == 0) { //We always save the first pose received.
 		return true;
 	}
 	else if(justGotConfig) {
 		poses.resize(0);
-		unsentStates.resize(0);
+		unsentPoses.resize(0);
 		justGotConfig = false;
 		return true;
 	}
-	geometry_msgs::Pose currentPose = state.getOdometry();
-	geometry_msgs::Pose oldPose = poses[poses.size()-1].getOdometry();
-	std::vector<double> currentPoseVector = {currentPose.position.x, currentPose.position.y, currentPose.position.z};
-	std::vector<double> oldPoseVector = {oldPose.position.x, oldPose.position.y, oldPose.position.z};
-	std::cout << "d^2: " << distanceSquared(currentPoseVector, oldPoseVector) << ", min: " << minPoseTranslationToSave << std::endl;
-	std::cout << "t1: " << poses[poses.size()-1].getTheta() << " t2: " << state.getTheta() << std::endl;
-	std::cout << "dTheta: " << fabs(state.getTheta()-poses[poses.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
-	return distanceSquared(currentPoseVector, oldPoseVector) > minPoseTranslationToSave || (fabs(state.getTheta()-poses[poses.size()-1].getTheta()) > minPoseRotationToSave);
+	geometry_msgs::Pose currentOdometry = currentPose.getOdometry();
+	geometry_msgs::Pose oldOdometry = poses[poses.size()-1].getOdometry();
+	std::vector<double> currentPosition = {currentOdometry.position.x, currentOdometry.position.y, currentOdometry.position.z};
+	std::vector<double> oldPosition = {oldOdometry.position.x, oldOdometry.position.y, oldOdometry.position.z};
+	std::cout << "d^2: " << distanceSquared(currentPosition, oldPosition) << ", min: " << minPoseTranslationToSave << std::endl;
+	std::cout << "t1: " << poses[poses.size()-1].getTheta() << " t2: " << currentPose.getTheta() << std::endl;
+	std::cout << "dTheta: " << fabs(currentPose.getTheta()-poses[poses.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
+	return distanceSquared(currentPosition, oldPosition) > minPoseTranslationToSave || (fabs(currentPose.getTheta()-poses[poses.size()-1].getTheta()) > minPoseRotationToSave);
 }
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
@@ -81,14 +83,14 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 		json message = json::parse(incomingMsg);
 		if(message["type"] == "REQUESTDATA") {
 			if(newDataForClient) {
-				assert(unsentStates.size() > 0);
-				char *outgoingMessage = unsentStates[0].makeJSONString();
+				assert(unsentPoses.size() > 0);
+				char *outgoingMessage = unsentPoses[0].makeJSONString();
 				std::cout << "\t\t\t\t\t\t\t RECEIVED: " << incomingMsg << std::endl;
 				std::cout << "\t\t\t\t\t\t\t SENT: " << "(data message)" << std::endl;
 				s->send(hdl, outgoingMessage, msg->get_opcode());
 				free(outgoingMessage);
-				unsentStates.erase(unsentStates.begin());
-				newDataForClient = unsentStates.size() > 0;
+				unsentPoses.erase(unsentPoses.begin());
+				newDataForClient = unsentPoses.size() > 0;
 			}
 			else {
 				json outgoingMessage = {
@@ -182,13 +184,13 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 				if(output.success) {
 					slamTransform = product(slamTransform, output.currentSLAM);
 					poses.push_back(lastWorldState);
-					unsentStates.push_back(lastWorldState);
+					unsentPoses.push_back(lastWorldState);
 					newDataForClient = true;
 				}
 			}
 			else {
 				poses.push_back(lastWorldState);
-				unsentStates.push_back(lastWorldState);
+				unsentPoses.push_back(lastWorldState);
 				newDataForClient = true;
 			}
 		}
