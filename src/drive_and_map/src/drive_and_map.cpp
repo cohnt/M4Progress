@@ -26,7 +26,7 @@ bool needOdom = true; //We want an odometry message first.
 bool serverStarted = false; //Has the server started yet?
 geometry_msgs::Pose lastOdomPose; //The last recorded odometry pose.
 sensor_msgs::LaserScan lastBaseScan; //The last recorded base scan.
-std::vector<pose> states;
+std::vector<pose> poses;
 std::vector<pose> unsentStates;
 pose lastWorldState; //The most recent world state.
 bool newDataForClient;
@@ -55,23 +55,23 @@ double distanceSquared(std::vector<double> a, std::vector<double> b) {
 	return sum;
 }
 bool doSave(pose state) {
-	if(states.size() == 0) {
+	if(poses.size() == 0) {
 		return true;
 	}
 	else if(justGotConfig) {
-		states.resize(0);
+		poses.resize(0);
 		unsentStates.resize(0);
 		justGotConfig = false;
 		return true;
 	}
 	geometry_msgs::Pose currentPose = state.getOdometry();
-	geometry_msgs::Pose oldPose = states[states.size()-1].getOdometry();
+	geometry_msgs::Pose oldPose = poses[poses.size()-1].getOdometry();
 	std::vector<double> currentPoseVector = {currentPose.position.x, currentPose.position.y, currentPose.position.z};
 	std::vector<double> oldPoseVector = {oldPose.position.x, oldPose.position.y, oldPose.position.z};
 	std::cout << "d^2: " << distanceSquared(currentPoseVector, oldPoseVector) << ", min: " << minPoseTranslationToSave << std::endl;
-	std::cout << "t1: " << states[states.size()-1].getTheta() << " t2: " << state.getTheta() << std::endl;
-	std::cout << "dTheta: " << fabs(state.getTheta()-states[states.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
-	return distanceSquared(currentPoseVector, oldPoseVector) > minPoseTranslationToSave || (fabs(state.getTheta()-states[states.size()-1].getTheta()) > minPoseRotationToSave);
+	std::cout << "t1: " << poses[poses.size()-1].getTheta() << " t2: " << state.getTheta() << std::endl;
+	std::cout << "dTheta: " << fabs(state.getTheta()-poses[poses.size()-1].getTheta()) << ", min: " << minPoseRotationToSave << std::endl;
+	return distanceSquared(currentPoseVector, oldPoseVector) > minPoseTranslationToSave || (fabs(state.getTheta()-poses[poses.size()-1].getTheta()) > minPoseRotationToSave);
 }
 
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
@@ -141,10 +141,10 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 		lastBaseScan = *msg;
 		lastWorldState.newOdometry(lastOdomPose, slamTransform);
 		lastWorldState.newBaseScan(lastBaseScan);
-		std::cout << "\t\t\tNumber of saved states: " << states.size() << std::endl;
+		std::cout << "\t\t\tNumber of saved poses: " << poses.size() << std::endl;
 		if(doSave(lastWorldState)) {
-			if(states.size() != 0) {
-				optimizationOutput output = optimizeScan(lastWorldState, states, config);
+			if(poses.size() != 0) {
+				optimizationOutput output = optimizeScan(lastWorldState, poses, config);
 				std::cout << "ICP Loop Count: " << output.icpLoopCount << std::endl;
 				//std::cout << "ICP Average Distances Traveled: ";
 				//for(int i=0; i<output.avgD.size(); ++i) {
@@ -181,13 +181,13 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& msg) {
 
 				if(output.success) {
 					slamTransform = product(slamTransform, output.currentSLAM);
-					states.push_back(lastWorldState);
+					poses.push_back(lastWorldState);
 					unsentStates.push_back(lastWorldState);
 					newDataForClient = true;
 				}
 			}
 			else {
-				states.push_back(lastWorldState);
+				poses.push_back(lastWorldState);
 				unsentStates.push_back(lastWorldState);
 				newDataForClient = true;
 			}
