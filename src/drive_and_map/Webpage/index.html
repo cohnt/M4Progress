@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>WebSocket Test</title>
+	<link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+<body>
+
+<div id="serverAddressContainer">
+	<pre>Server Address </pre><textarea id="serverAddress" class="oneLineInput">ws://127.0.0.1:9002</textarea>
+</div>
+<br>
+<br>
+<div id="connect"><div>Connect</div></div>
+<div id="relock"><div>Relock View to<br>Robot Perspective</div></div>
+<br>
+<br>
+<canvas id="map" width="750px" height="750px"></canvas>
+<br>
+<div id="debugCont">
+	<div id="frameTimeCont">
+		<pre>Frame Time: <span id="frameTime"></span> ms</pre>
+		<br>
+		<pre>20-Average: <span id="avgFrameTime"></span> ms</pre>
+	</div>
+</div>
+<!-- -=-=- -->
+<script type="text/javascript" src="./numeric-1.2.6.js"></script>
+<script type="text/javascript" src="./script.js"></script>
+</body>
+</html>

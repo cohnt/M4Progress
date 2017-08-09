@@ -1,0 +1,35 @@
+body {
+	background-color: #ffffff;
+}
+div {
+	display: inline-block;
+}
+textarea {
+	vertical-align: bottom;
+}
+pre {
+	margin: 2px;
+	display: inline-block;
+}
+canvas {
+	border: 1px dotted #777777;
+	background-color: #eeeeee;
+}
+
+textarea.oneLineInput {
+	height: 18px;
+	width: 200px;
+	resize: horizontal;
+	max-width: 750px;
+}
+
+div#connect {
+	background-color: #aaccff;
+	padding: 20px;
+	vertical-align: middle;
+}
+div#relock {
+	background-color: #55ff55;
+	padding: 11px 20px;
+	vertical-align: middle;
+}
