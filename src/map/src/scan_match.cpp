@@ -29,7 +29,7 @@ std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3
 	return output;
 }
 
-void removeDuplicatePoints(worldState &newScan, std::vector<worldState> map) {
+void removeDuplicatePoints(worldState &newScan, std::vector<worldState> map, icpConfig cfg) {
 	int scansToSearchBackForDuplicates = 25;
 	int startIndex = map.size() - scansToSearchBackForDuplicates;
 	for(int i=0; i<newScan.walls.size(); ++i) {
@@ -40,7 +40,7 @@ void removeDuplicatePoints(worldState &newScan, std::vector<worldState> map) {
 			else {
 				for(int k=map[j].walls.size() - 1; k>=0; --k) {
 					double d = distanceSquared(newScan.walls[i], map[j].walls[k]);
-					if(d < 0.01*0.01) {
+					if(d < cfg.scanDensityDistanceSquared) {
 						map[j].walls.erase(map[j].walls.begin() + k);
 						if(map[j].walls.size() == 0) {
 							map.erase(map.begin() + j);
@@ -340,7 +340,7 @@ optimizationOutput optimizeScan(worldState &newScan, std::vector<worldState> map
 		newScan.walls[i] = newWallsVector[i];
 	}
 
-	removeDuplicatePoints(newScan, map);
+	removeDuplicatePoints(newScan, map, cfg);
 
 	output.icpLoopCount = totalLoopCount;
 	output.netAngleError = scanAngleError;

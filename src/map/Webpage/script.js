@@ -29,15 +29,16 @@ var maxUserTransformationTimeElapsed = 0.5 * 1000; //The maximum number of milli
 var printMatrixMinColWidth = 20;
 var lidarMinDistanceSquared = 0.1;
 var maxNumSavedPoses = Infinity;
-var minICPComparePoints = 1500; //The minimum number of points ICP must use to compare.
+var minICPComparePoints = 3000; //The minimum number of points ICP must use to compare.
 var maxICPLoopCount = 250; //The maximum number of times ICP can run.
 var icpAverageDistanceTraveledThreshold = 0.01; //The average distance traveled per point must be less than this for ICP to finish.
 var icpAverageDistanceTraveledThresholdSquared = Math.pow(icpAverageDistanceTraveledThreshold, 2); //This is squared for use with the distanceSquared function.
 var icpNoMovementCounterThreshold = 5; //ICP must lead to no movement at least this many times for it to finish.
 var doIDrawWallsFill = false; //Whether or not to draw the floor "fill".
 var goodCorrespondenceThresholdSquared = Math.pow(0.01, 2);
-var maximumPointMatchDistance = 5;
-var percentChanceToMatchPoints = 20;
+var maximumPointMatchDistance = 2;
+var percentChanceToMatchPoints = 10;
+var scanDensityDistanceSquared = Math.pow(0.01, 2);
 
 //Global variables.
 var canvas; //A global variable 
@@ -471,7 +472,8 @@ function makeConfigMessage() {
 		"icpNoMovementCounterThreshold": icpNoMovementCounterThreshold,
 		"goodCorrespondenceThresholdSquared": goodCorrespondenceThresholdSquared,
 		"maximumPointMatchDistance": maximumPointMatchDistance,
-		"percentChanceToMatchPoints": percentChanceToMatchPoints
+		"percentChanceToMatchPoints": percentChanceToMatchPoints,
+		"scanDensityDistanceSquared": scanDensityDistanceSquared
 	};
 	return msg;
 }

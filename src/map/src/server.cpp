@@ -114,6 +114,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 			config.goodCorrespondenceThresholdSquared = message["goodCorrespondenceThresholdSquared"];
 			config.maximumPointMatchDistance = message["maximumPointMatchDistance"];
 			config.percentChanceToMatchPoints = message["percentChanceToMatchPoints"];
+			config.scanDensityDistanceSquared = message["scanDensityDistanceSquared"];
 			json outgoingMessage = {
 				{"type", "RECEIVEDCONFIG"}
 			};

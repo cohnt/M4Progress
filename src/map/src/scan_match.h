@@ -14,6 +14,7 @@ struct icpConfig {
 	double goodCorrespondenceThresholdSquared;
 	double maximumPointMatchDistance;
 	double percentChanceToMatchPoints;
+	double scanDensityDistanceSquared;
 };
 struct icpOutput {
 	std::array<std::array<double, 3>, 3> rotationMatrix;
@@ -44,6 +45,7 @@ struct optimizationOutput {
 	bool success;
 };
 
+void removeDuplicatePoints(worldState &newScan, std::vector<worldState> map, icpConfig cfg);
 std::array<std::array<double, 3>, 3> product(std::array<std::array<double, 3>, 3> a, std::array<std::array<double, 3>, 3> b);
 std::vector<std::array<double, 3>> matchPoints(std::vector<std::vector<double>> pc1, std::vector<std::vector<double>> pc2);
 svdOutput SVD(std::vector<std::vector<double>> A);
