@@ -19,7 +19,6 @@ using websocketpp::lib::bind;
 
 using json = nlohmann::json;
 
-
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 	//
 	//
